@@ -138,7 +138,7 @@ export function InboxPage() {
         received.length === 0 ? (
           <div className="empty-state">
             <h3>아직 받은 알림이 없어요</h3>
-            <p>마이페이지에서 학과·관심사를 정하거나 공지에 별표를 누르면 여기로 알려드려요.</p>
+            <p>나에게 해당되는 새 공지가 올라오거나 저장한 공지의 마감이 다가오면 여기로 알려드려요. 앞으로 받을 알림은 ‘예정된 알림’에서 볼 수 있어요.</p>
           </div>
         ) : (
           received.map(([day, entries]) => (
