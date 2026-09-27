@@ -37,9 +37,6 @@ class NoticeStructured(BaseModel):
     contact: str | None = None
     # 정해진 칸 순서대로 채운 상세 정보. 자유 요약문 대신 이것만 화면에 보여준다.
     brief: list[BriefField] = Field(default_factory=list)
-    # LLM이 정해진 주제 목록(INTEREST_SYNONYMS의 키)에서만 고른 주제. 본문에 그 단어가 없어도
-    # "머신러닝 교육" → "ai"처럼 관심사와 잇는 데 쓴다. LLM이 꺼져 있으면 비어 있다.
-    topics: list[str] = Field(default_factory=list)
     # 시험일·성적발표일처럼 "라벨: 날짜" 줄로 적힌 일정.
     schedule: list[ScheduleItem] = Field(default_factory=list)
     # 접수 시작·마감 시각. 시각까지 알면 "YYYY-MM-DDTHH:MM", 날짜만 알면 "YYYY-MM-DD".

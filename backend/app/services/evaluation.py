@@ -49,7 +49,7 @@ async def evaluate(db: Session, settings: Settings) -> dict[str, object]:
             gold_with_deadline += 1
             recalled += int(result.deadline == label.deadline)
     return {
-        "mode": f"규칙+LLM({settings.llm_model})" if settings.llm_enabled else "규칙",
+        "mode": "규칙",
         "labeled": len(labels),
         "category_accuracy": _ratio(category_hit, len(labels)),
         "deadline_accuracy": _ratio(deadline_hit, len(labels)),

@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint, func
-from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -48,7 +47,7 @@ class Notice(Base):
     source_url: Mapped[str] = mapped_column(String(500), nullable=False)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     # 한글은 글자당 3바이트라 본문+첨부가 MariaDB TEXT(64KB)를 넘을 수 있다.
-    raw_text: Mapped[str] = mapped_column(Text().with_variant(MEDIUMTEXT(), "mysql", "mariadb"), nullable=False)
+    raw_text: Mapped[str] = mapped_column(Text(), nullable=False)
     structured_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     category: Mapped[str] = mapped_column(String(50), default="기타", nullable=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -129,7 +128,7 @@ class AlarmLog(Base):
 
 
 class EvalLabel(Base):
-    """사람이 확인한 정답(분류·마감일). 규칙·LLM을 바꿀 때마다 같은 정답으로 정확도를 잰다."""
+    """사람이 확인한 정답(분류·마감일). 규칙을 바꿀 때마다 같은 정답으로 정확도를 잰다."""
 
     __tablename__ = "eval_labels"
 

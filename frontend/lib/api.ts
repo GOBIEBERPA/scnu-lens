@@ -156,12 +156,6 @@ export function noticeCalendarUrl(noticeId: number): string {
   return absoluteApi(`/notices/${noticeId}/calendar.ics`);
 }
 
-// 입력: 기기 ID, 출력: 내 마감 일정 구독 주소(https)와 캘린더 앱이 바로 여는 webcal 주소.
-export function myCalendarUrls(deviceId: string): { https: string; webcal: string } {
-  const https = absoluteApi(`/calendar/${encodeURIComponent(deviceId)}.ics`);
-  return { https, webcal: https.replace(/^https?:/, "webcal:") };
-}
-
 // 입력: 관리자 키, 출력: 정답 입력용 공지 목록과 현재 예측.
 export async function fetchEvalItems(adminKey: string): Promise<EvalItem[]> {
   return request<EvalItem[]>("/admin/eval/items", { headers: { "X-Admin-Key": adminKey } });

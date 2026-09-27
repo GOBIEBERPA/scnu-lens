@@ -89,11 +89,3 @@ def test_only_deadline_known_is_marked_as_such() -> None:
     """입력: 날짜 범위 없이 마감일만 알려진 공지, 출력: 기간 칸에 '마감일만 확인'이라 밝힘을 검증한다."""
     brief = _as_dict(build_brief("신청 안내", "기한 내 신청 바랍니다.", "", "2026-10-01", []))
     assert brief["기간"].value == "~ 2026-10-01 (마감일만 확인)"
-
-
-def test_llm_value_is_used_only_as_last_resort() -> None:
-    """입력: 규칙으로 못 찾은 칸에 대한 LLM 값, 출력: 그 칸만 LLM 값으로 채워짐을 검증한다."""
-    brief = _as_dict(
-        build_brief("안내", "문의는 학생처로 해주세요.", "", None, [], llm_values={"문의": "학생처", "대상": "전체"})
-    )
-    assert brief["문의"].value == "학생처" and brief["문의"].method == "llm"

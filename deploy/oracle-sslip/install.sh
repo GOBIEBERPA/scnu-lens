@@ -81,7 +81,6 @@ ADMIN_API_KEY=$(openssl rand -hex 24)
 SCHEDULER_ENABLED=true
 CRAWL_CRON_HOURS=*
 NOTICE_RETENTION_DAYS=30
-LLM_ENABLED=false
 VAPID_SUBJECT=mailto:scnu-lens@example.com
 $vapid
 # 공공데이터포털 인증키(큐넷·데이터 자격검정·K-Startup). 비워 두면 학교 공지만 수집한다.

@@ -15,7 +15,6 @@ export type StructuredNotice = {
   target_students?: string[];
   keywords?: string[];
   action_required?: string | null;
-  topics?: string[];
   schedule?: { date: string; label: string }[];
   // 접수 시작·마감. 시각까지 알면 "YYYY-MM-DDTHH:MM"(한국 시간), 날짜만 알면 "YYYY-MM-DD".
   open_at?: string | null;

@@ -1,4 +1,4 @@
-"""첨부파일 읽기·중복 묶기·캘린더·저장·정답지 평가·LLM 주제 검증 테스트."""
+"""첨부파일 읽기·중복 묶기·캘린더·저장·정답지 평가 테스트."""
 
 import io
 import struct
@@ -13,7 +13,6 @@ from app.models import UserProfile
 from app.services.ai import relevance_score
 from app.services.calendar import build_calendar
 from app.services.dedup import mark_duplicates, normalize_title, same_notice
-from app.services.llm import LlmStructurer
 from helpers import make_notice as _notice, memory_db as _memory_db
 
 
@@ -133,7 +132,7 @@ def test_calendar_has_all_day_event_and_folds_lines() -> None:
 
 
 def test_save_notice_flow(client) -> None:
-    """입력: 저장→조회→캘린더→해제, 출력: 저장 목록·마감 알림 대상·구독 캘린더가 함께 바뀜을 검증한다."""
+    """입력: 저장→조회→해제, 출력: 저장 목록·마감 알림 대상이 함께 바뀜을 검증한다."""
     api, factory = client
     with factory() as db:
         notice = _notice("NOVA 장학 신청", structured_json={"deadline": "2026-10-02", "brief": []})
@@ -142,8 +141,6 @@ def test_save_notice_flow(client) -> None:
         notice_id = notice.id
     assert api.put(f"/api/notices/{notice_id}/save", params={"web_device_id": "dev"}).json()["ids"] == [notice_id]
     assert [n["id"] for n in api.get("/api/notices/saved", params={"web_device_id": "dev"}).json()] == [notice_id]
-    feed = api.get("/api/calendar/dev.ics")
-    assert feed.status_code == 200 and "NOVA 장학 신청" in feed.text
     assert "raw_text" not in api.get("/api/notices").json()["items"][0]
     api.delete(f"/api/notices/{notice_id}/save", params={"web_device_id": "dev"})
     assert api.get("/api/notices/saved", params={"web_device_id": "dev"}).json() == []
@@ -181,17 +178,6 @@ def test_eval_label_and_report(client) -> None:
     assert report["deadline_accuracy"] == 1.0
     assert report["errors"][0]["field"] == "분류" and report["errors"][0]["gold"] == "안전"
     assert api.get("/api/admin/eval/report").status_code == 401
-
-
-# ---------- LLM 주제 ----------
-
-
-def test_llm_topics_must_come_from_fixed_list() -> None:
-    """입력: 목록 밖 주제가 섞인 모델 응답, 출력: 목록 안 주제만 남고 매칭에 쓰임을 검증한다."""
-    assert LlmStructurer._allowed_topics(["AI", "우주여행", "취업", 3]) == ["ai", "취업"]
-    user = UserProfile(department="미설정", interests=["인공지능"])
-    notice = _notice("머신 비전 실습 참가자 모집", structured_json={"topics": ["ai"]})
-    assert relevance_score(user, notice) >= 2
 
 
 # ---------- 사용성: 정렬·빠른 필터·학과 목록·알림 링크 ----------

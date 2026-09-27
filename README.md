@@ -108,20 +108,6 @@ python scripts\gen_vapid.py   # VAPID 키쌍 생성 → .env에 붙여넣기
 `VAPID_PUBLIC_KEY`와 `VAPID_PRIVATE_KEY`가 있으면 웹 푸시가 켜지고, 없으면 조용히 건너뜁니다.
 웹 푸시는 **HTTPS에서만 동작**하며(localhost는 예외), **iOS는 홈 화면에 추가한 PWA에서만** 알림이 옵니다.
 
-#### 휴대폰에서 열기 (개발 중)
-
-배포 전에 휴대폰으로 확인하려면 Tailscale을 씁니다. 같은 계정으로 로그인한 기기끼리만 접근됩니다.
-
-```powershell
-tailscale serve --bg --set-path=/ http://127.0.0.1:3000
-tailscale serve --bg --set-path=/api http://127.0.0.1:8001/api
-```
-
-`https://<기기이름>.<tailnet>.ts.net` 주소로 HTTPS까지 붙어서, 푸시 알림도 휴대폰에서 테스트할 수 있습니다
-(관리 콘솔에서 MagicDNS와 HTTPS Certificates가 켜져 있어야 합니다). 해제는 `tailscale serve --https=443 off`.
-
-프론트엔드는 접속한 주소를 그대로 따라가므로(`lib/api.ts`), localhost든 Tailscale 주소든 설정 변경 없이 동작합니다.
-
 #### 학과·부속기관 공지사항 전체 수집
 
 학교 사이트는 모두 같은 게시판 엔진(`/na/ntt/selectNttList.do`)을 쓰므로, 게시판 주소만 알면 같은 크롤러로 수집됩니다.
@@ -157,7 +143,7 @@ python -m scripts.refetch_bodies         # 본문 추출 규칙을 바꾼 뒤, �
 같은 공지가 학사공지와 학과 게시판에 함께 올라오면 제목을 비교해(말머리·기호 제거, 앞부분 일치, 유사도 0.93, 숫자가 다르면 별개)
 하나로 묶습니다(`app/services/dedup.py`). 본부 게시판 글을 대표로 두고, 목록·알림에는 대표만, 카드에는 "외 N곳"으로 표시합니다.
 
-#### 저장(별표)·캘린더
+#### 저장(별표)
 
 - 카드·상세 창의 별을 누르면 저장되고, 매칭 여부와 상관없이 **마감 3일·1일 전과 당일에 알림**이 갑니다(마이페이지에서 목록 확인).
 - 상세 창의 **캘린더에 마감 추가**는 `.ics` 한 건을 내려받습니다.
@@ -188,7 +174,6 @@ python -m scripts.refetch_bodies         # 본문 추출 규칙을 바꾼 뒤, �
 
 ```powershell
 python -m scripts.evaluate          # 규칙만
-python -m scripts.evaluate --llm    # 같은 정답지로 LLM을 켜고 채점 → 발표 자료에 전후 비교로 사용
 ```
 
 #### 마감일과 매칭 규칙
@@ -287,29 +272,6 @@ D-day 표시·개인화 매칭·마감 리마인더가 학교 공지와 똑같�
 시험일·발표일은 본문의 `시험일: …`, `성적발표: …`, `합격자발표: …` 줄에서 뽑아 `structured_json.schedule`에 두며,
 API: `GET /api/calendar/events?start&end&scope=all|mine`.
 
-#### 선택: 로컬 LLM 보강 (`LLM_ENABLED=true`)
-
-클라우드에 여유 자원이 있으면 Ollama의 소형 LLM을 **구조화 단계에만** 얹을 수 있습니다.
-하루 3회 배치에서 수십 건만 처리하므로 건당 수 초가 걸려도 문제가 없고, 실시간 응답 경로에는 쓰지 않습니다.
-
-핵심은 **LLM이 규칙을 대체하지 않는다**는 점입니다. 규칙 결과가 바닥값이고, LLM은 제안만 합니다.
-
-| 항목 | 검증 방식 | 실패 시 |
-|---|---|---|
-| `deadline` | 그 날짜가 본문에 어떤 표기로든 실제로 등장하는지 대조 | 규칙 결과 사용 |
-| `target_departments` / `target_students` | 본문에 그대로 등장하는 값만 통과 | 규칙 결과 사용 |
-| `category` | 허용된 7개 값인지 확인, 확정 키워드가 있으면 그쪽이 우선 | 규칙 결과 사용 |
-| 호출 실패·타임아웃 | — | 규칙 결과 사용 |
-
-마감일을 지어내면 학생이 잘못된 D-day를 믿고 마감을 놓치므로, 원문에서 확인되지 않는 날짜는 무조건 버립니다.
-
-```bash
-ollama serve
-ollama pull qwen2.5:3b-instruct   # GPU가 있으면 7b-instruct로 올려도 됨
-```
-
-`LLM_MODEL` 환경변수만 바꾸면 모델을 교체할 수 있습니다. 끄면(`LLM_ENABLED=false`, 기본값) 아래 규칙만으로 동작합니다.
-
 #### 카테고리 분류 방식
 
 `학사·장학·취업·행사·기타`는 임베딩 유사도로 판정하고, 유사도가 임계값(0.32)에 못 미치면 `기타`로 둡니다.
@@ -322,198 +284,98 @@ ollama pull qwen2.5:3b-instruct   # GPU가 있으면 7b-instruct로 올려도 �
 .
 ├─ backend/
 │  ├─ app/
-│  │  ├─ api/routes.py          # 공지, 프로필, 매칭 결과, 알림함, 관리자
-│  │  ├─ crawlers/              # 소스별 독립 파서
-│  │  ├─ services/              # 로컬 분류 모델, 배치, 웹 푸시·알림 발송
-│  │  ├─ models.py              # SQLAlchemy/MariaDB 모델
-│  │  └─ main.py                # FastAPI + 스케줄러 수명주기
-│  ├─ scripts/seed.py
-│  ├─ sql/schema.sql
-│  └─ tests/
-├─ frontend/
-│  ├─ app/                      # Next.js 대시보드와 /admin
-│  ├─ components/
-│  ├─ lib/
-│  └─ public/                   # manifest, Service Worker, PWA 아이콘
-├─ docker-compose.yml
-└─ render.yaml
+│  │  ├─ api/routes.py        # 공지, 프로필, 매칭 결과, 알림함, 캘린더, 관리자 API
+│  │  ├─ crawlers/            # 학교 게시판 109곳, 큐넷·데이터자격·K-Startup API, 첨부(HWP/PDF) 읽기
+│  │  ├─ services/            # 임베딩 분류·정보 추출(ai.py, brief.py), 중복 묶기, 알림 발송, 배치
+│  │  ├─ models.py            # SQLAlchemy 모델(SQLite)
+│  │  └─ main.py              # FastAPI + APScheduler
+│  ├─ scripts/                # 게시판 주소 탐색, 규칙 재적용, 정확도 채점, VAPID 키 생성, 성능 측정
+│  └─ tests/                  # pytest
+├─ frontend/                  # Next.js 16 PWA (화면, 서비스 워커, 아이콘)
+│  └─ vercel.json             # /api 요청을 Oracle 서버로 전달
+└─ deploy/oracle-sslip/       # Oracle 서버 설치 스크립트, systemd 서비스, Caddy 설정
 ```
 
-### 선택한 MVP 기본값
+### 설계 선택
 
 | 항목 | 선택 | 이유 |
 |---|---|---|
-| 프론트 | Next.js App Router | Vercel 배포와 PWA 구성이 간단하고 서버 렌더링 확장이 쉬움 |
-| 분류 모델 | `paraphrase-multilingual-MiniLM-L12-v2` (fastembed/ONNX) | 외부 API 키 없이 CPU에서 바로 도는 경량(~100MB대) 다국어 임베딩 모델. 모델 로딩에 실패해도 키워드 규칙으로 자동 폴백 |
-| 스케줄 | 매일 08·13·19시 | 등교 전, 점심, 저녁 세 번이면 MVP에서 충분하며 크롤링 빈도를 통제 가능 |
-| 웹 식별 | 브라우저 UUID | 로그인 구축 없이 기기별 관심사를 유지 |
-| 검색 | MariaDB 제목·본문 LIKE | 공지 수가 작은 MVP에 충분. 규모가 커지면 FULLTEXT/벡터 검색으로 교체 가능 |
-| 개인화 | 규칙 기반 매칭 | 요약/문장 생성 없이, 분류 결과와 학과·관심사 겹침만으로 "왜 나에게 뜨는지"를 설명 |
+| 분류 모델 | `paraphrase-multilingual-MiniLM-L12-v2` (fastembed/ONNX) | 외부 API 키 없이 CPU에서 도는 경량 다국어 임베딩. 로딩에 실패하면 키워드 규칙으로 자동 폴백 |
+| 개인화 | 규칙 기반 점수 | 학과·관심사 겹침만으로 "왜 나에게 뜨는지"를 설명할 수 있음 |
+| DB | SQLite | 서버 한 대, 공지 수천 건 규모에 충분하고 백업이 파일 하나 |
+| 수집 주기 | 매시간 | 게시판마다 최근 7일치 목록만 보고, 새 글만 상세까지 받음 |
+| 로그인 | 없음(브라우저 기기 ID) | 설치·가입 없이 30초 설정으로 바로 사용 |
+| 배포 | 화면 Vercel + API Oracle | 화면은 짧은 주소·CDN, 수집·알림·DB는 24시간 켜진 서버 |
 
-### 가장 빠른 실행: Docker Compose
-
-1. 루트에 `.env`를 만들고 `backend/.env.example` 내용을 복사합니다.
-2. 실행합니다.
-
-```bash
-docker compose up --build
-docker compose exec backend python scripts/seed.py
-```
-
-- 웹: <http://localhost:3000>
-- API 문서: <http://localhost:8000/docs>
-- 관리자: <http://localhost:3000/admin> (`ADMIN_API_KEY` 사용)
-
-분류 모델은 첫 실행 시 Hugging Face에서 자동 다운로드되며(인터넷 필요, 이후 캐시), 다운로드에 실패해도 키워드 규칙으로 자동 폴백해 데모가 끊기지 않습니다.
-
-### 수동 로컬 실행
-
-#### 1. MariaDB
-
-MariaDB 10.6+에 `backend/sql/schema.sql`을 적용합니다. Docker로 DB만 띄워도 됩니다.
-
-```bash
-docker compose up -d db
-```
-
-#### 2. FastAPI
-
-PowerShell 기준입니다.
+### 로컬 실행
 
 ```powershell
+# 백엔드 (http://localhost:8000)
 cd backend
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+python -m venv .venv; .venv\Scripts\activate
 pip install -r requirements.txt
-Copy-Item .env.example .env
-python scripts\seed.py
+copy .env.example .env          # 필요한 값 채우기
 uvicorn app.main:app --reload --port 8000
-```
 
-MariaDB 없이 빠르게 볼 때는 `DATABASE_URL=sqlite:///./scnu_lens.db`로 바꾸면 됩니다.
-
-#### 3. Next.js
-
-```powershell
+# 프론트엔드 (http://localhost:3000)
 cd frontend
-npm install
-Copy-Item .env.example .env.local
-npm run dev      # 개발용(코드 수정 즉시 반영)
-npm run serve    # 실사용용: next build 후 next start. 휴대폰 데모·배포는 이쪽
+npm ci
+set NEXT_PUBLIC_API_URL=http://localhost:8000/api
+npm run dev
 ```
 
-`components/dashboard.tsx`는 화면 조각을 조립만 하고, 조각은 `components/feed/`(상단 바·지표·추천·검색·카드·페이지·상세 창·상태 훅), 표시용 함수는 `lib/notice-format.ts`에 있습니다.
+DB는 `DATABASE_URL`(기본 `sqlite:///./scnu_lens.db`) 파일로 자동 생성됩니다.
 
-브라우저 메뉴의 **홈 화면에 추가**를 선택하면 Android·iOS에서 standalone PWA로 실행됩니다. 서비스 워커는 앱 셸과 최근 조회 공지 응답을 캐시합니다.
+### 환경변수 (`backend/.env`)
 
-### 환경변수
+| 이름 | 설명 |
+|---|---|
+| `DATABASE_URL` | 기본 `sqlite:///./scnu_lens.db` |
+| `ADMIN_API_KEY` | `/api/admin/*`의 `X-Admin-Key`. `APP_ENV=production`에서 기본값이면 서버가 켜지지 않음 |
+| `FRONTEND_ORIGIN` | 허용할 프론트 주소(쉼표 구분) |
+| `DATA_GO_KR_KEY` | 공공데이터포털 인증키(큐넷·데이터자격검정·K-Startup). 비우면 학교 공지만 수집 |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | 웹 푸시 키(`python scripts/gen_vapid.py`로 생성) |
+| `CRAWL_CRON_HOURS` | 수집 시각(서울 기준). `*`면 매시간 |
+| `NEXT_PUBLIC_API_URL` | (프론트, 선택) API 주소. 비우면 https에서는 같은 주소의 `/api`를 부름 |
 
-| 이름 | 필수 | 설명 |
-|---|---:|---|
-| `DATABASE_URL` | 운영 필수 | `mysql+pymysql://USER:PASS@HOST:3306/DB?charset=utf8mb4` |
-| `LLM_ENABLED` | 선택 | 로컬 LLM 구조화 보강 사용 여부, 기본 `false` |
-| `LLM_BASE_URL` | 선택 | Ollama 주소, 기본 `http://localhost:11434` |
-| `LLM_MODEL` | 선택 | 사용할 모델, 기본 `qwen2.5:3b-instruct` |
-| `ADMIN_API_KEY` | 관리자 | `/api/admin/*`의 `X-Admin-Key` |
-| `FRONTEND_ORIGIN` | 운영 필수 | 허용할 프론트 origin. 여러 개면 쉼표 구분 |
-| `CRAWL_CRON_HOURS` | 선택 | 서울 시간 기준 실행 시각, 기본 `8,13,19` |
-| `NEXT_PUBLIC_API_URL` | 프론트 필수 | 공개 API 주소 + `/api` |
-
-### 배치 수동 실행
+### 배치 수동 실행 · 규칙 재적용
 
 ```bash
-curl -X POST http://localhost:8000/api/admin/crawl -H "X-Admin-Key: local-admin-key"
+curl -X POST http://localhost:8000/api/admin/crawl -H "X-Admin-Key: <관리자 키>"
+python -m scripts.restructure   # 마감일·필터 규칙을 바꾼 뒤, 이미 모은 공지에 다시 적용
 ```
 
-반환값은 수집·신규·구조화·브리핑·발송·마감 리마인더 건수와 소스별 오류입니다. 한 소스가 실패해도 다른 소스는 계속 처리됩니다.
+한 소스가 실패해도 다른 소스는 계속 처리되고, 결과에 소스별 오류가 담깁니다.
 
 ### 주요 API
 
 | 메서드 | 경로 | 설명 |
 |---|---|---|
-| GET | `/api/notices` | 카테고리·검색어·페이지 기준 공지 목록 |
-| GET | `/api/notices/for-me` | `web_device_id` 프로필과 실시간 매칭된 공지와 그 근거 |
-| GET | `/api/notices/{id}` | 공지 단건 |
-| POST | `/api/profiles` | 학과·관심 키워드 저장(보낸 필드만 갱신) |
-| GET | `/api/briefings` | 배치가 저장해 둔 매칭 기록 |
-| POST | `/api/admin/crawl` | 전체 배치 수동 실행 (`X-Admin-Key`) |
+| GET | `/api/notices` | 분야·검색어·출처·정렬·페이지 기준 공지 목록 |
+| GET | `/api/notices/for-me` | 기기 프로필과 실시간 매칭된 공지와 추천 이유 |
+| GET | `/api/notices/{id}` | 공지 단건(정리 카드 포함) |
+| GET | `/api/departments` | 학과 선택 목록 |
+| POST | `/api/profiles` | 학과·관심사·알림 설정 저장 |
+| GET | `/api/calendar/events` | 캘린더 화면용 마감일·시험일·발표일 |
+| GET | `/api/inbox` | 알림함 |
+| POST | `/api/push/subscribe` | 웹 푸시 구독 |
+| POST | `/api/admin/crawl` | 전체 배치 즉시 실행(`X-Admin-Key`) |
 
-### 테스트와 빌드 검증
+### 테스트
 
 ```powershell
-cd backend
-pytest
-
-cd ..\frontend
-npm run typecheck
-npm run build
+cd backend; pytest            # 136개
+cd ..\frontend; npm run build
 ```
 
-### 배포
+### 배포 (현재 운영 구성)
 
-#### 추천: Oracle Cloud Always Free 한 대 (`deploy/oracle/`)
+- **API·수집·알림**: Oracle Cloud ARM 서버. 저장소 루트에서 `sudo bash deploy/oracle-sslip/install.sh` 한 번으로 Python 가상환경, Node, systemd 서비스(`scnu-lens-api`, `scnu-lens-web`), Caddy https까지 설치합니다. 다시 실행하면 코드만 갱신하고 `.env`·DB는 그대로 둡니다. 자세한 내용은 `deploy/oracle-sslip/README.md`.
+- **화면**: Vercel(`frontend/`). `vercel.json`이 `/api/*` 요청을 Oracle 서버로 넘기므로 브라우저 입장에서는 같은 주소라 CORS 설정이 필요 없습니다.
 
-ARM 2코어·12GB 무료 서버 한 대에 MariaDB·백엔드·프론트·Caddy(자동 HTTPS)를 모두 올립니다(LLM 없이 약 1.3GB 사용).
-분류 모델이 메모리를 많이 써서 512MB짜리 무료 PaaS에는 올라가지 않기 때문입니다.
+### 운영 주의
 
-> 2026년 6월 15일부터 Always Free Ampere A1 한도가 4 OCPU·24GB에서 **2 OCPU·12GB**(월 1,500 OCPU시간·9,000GB시간)로 줄었습니다.
-> 무료 계정은 7일 동안 CPU·네트워크·메모리 사용률이 모두 20% 미만이면 서버가 회수될 수 있습니다. 이 앱은 평소 사용률이 낮아
-> 오래 운영하려면 계정을 종량제(Pay As You Go)로 전환하세요. 무료 한도 안에서는 요금이 나오지 않습니다.
-
-1. OCI 콘솔에서 Ubuntu 22.04/24.04 **Ampere A1** 인스턴스 생성(**2 OCPU / 12GB**). "Out of capacity"가 뜨면 다른 가용 영역을 고르거나
-   잠시 뒤 다시 시도합니다.
-2. VCN 보안 목록에 TCP 80·443 수신 허용, 무료 도메인(DuckDNS 등)을 서버 공인 IP로 연결.
-3. 서버에서:
-
-```bash
-git clone <저장소> scnu-lens && cd scnu-lens
-bash deploy/oracle/setup.sh            # Docker 설치, iptables 80/443 열기, 스왑 4GB
-# 다시 로그인한 뒤
-cd deploy/oracle && cp .env.example .env && nano .env   # DOMAIN·DB 암호·관리자 키·VAPID 등
-docker compose up -d --build
-```
-
-LLM까지 켜려면:
-
-```bash
-docker compose --profile llm up -d
-docker compose exec ollama ollama pull qwen2.5:7b-instruct
-# .env에서 LLM_ENABLED=true 로 바꾼 뒤
-docker compose up -d backend
-```
-
-| 모델(4bit) | 메모리 | 공지 1건(추정, ARM 2코어) | 비고 |
-|---|---|---|---|
-| qwen2.5:3b-instruct | 약 2.5GB | 1~2분 | 2코어에서 쓸 수 있는 상한 |
-| qwen2.5:7b-instruct | 약 5GB | 3~4분 | 메모리는 되지만 매시간 배치에 비해 느림 |
-
-2코어 서버에서는 LLM을 끄고(기본값) 규칙+임베딩 분류만 쓰는 것을 권장합니다.
-
-추정치이므로 실제 속도는 `/admin/eval` 채점과 함께 서버에서 확인하세요. `.dockerignore`가 `.env`·로컬 DB·가상환경을 이미지에서 뺍니다.
-
-#### 프론트 — Vercel
-
-1. 저장소를 Vercel에 연결하고 Root Directory를 `frontend`로 선택합니다.
-2. `NEXT_PUBLIC_API_URL=https://<backend-domain>/api`를 설정합니다.
-3. 배포 후 생성된 Vercel origin을 백엔드 `FRONTEND_ORIGIN`에 넣습니다.
-
-#### 백엔드 — Render
-
-루트의 `render.yaml`로 Blueprint를 생성하고 `DATABASE_URL`, `FRONTEND_ORIGIN`, VAPID 키를 설정합니다. MariaDB는 Railway MariaDB 플러그인, Aiven 등 외부 관리형 인스턴스를 연결할 수 있습니다. 무료 호스팅은 유휴 절전으로 첫 응답이 느릴 수 있고, 분류 모델을 처음 로드할 때 다운로드 시간이 조금 더 걸릴 수 있습니다.
-
-#### 백엔드·MariaDB — Railway
-
-1. Railway 프로젝트에 MariaDB 서비스를 추가합니다.
-2. 백엔드 서비스 Root Directory를 `backend`로 설정합니다.
-3. MariaDB 연결 정보를 SQLAlchemy `DATABASE_URL` 형식으로 설정합니다.
-4. `FRONTEND_ORIGIN`, VAPID 환경변수를 추가합니다.
-
-### 운영 전 확인 사항
-
-- 학교 게시판 이용정책·robots 정책과 요청 빈도를 확인하고, 기본 3회/일보다 높이지 마세요.
-- 크롤링 상세 셀렉터는 사이트 개편 시 소스별 파서에서 수정해야 합니다.
-- 분류 모델이 만든 카테고리·마감일도 참고용이며, 중요한 일정은 원문 링크로 재확인하도록 UI에 안내합니다.
-- `ADMIN_API_KEY`, VAPID 비밀키, DB 암호는 저장소에 커밋하지 마세요.
-- `APP_ENV=production`에서는 `ADMIN_API_KEY`가 코드 기본값(`local-admin-key`)이면 서버가 켜지지 않습니다.
-- 다중 백엔드 인스턴스에서는 스케줄러 중복 실행을 막기 위해 한 인스턴스만 `SCHEDULER_ENABLED=true`로 둡니다.
-
+- 학교 사이트(`scnu.ac.kr`) 외 주소는 수집하지 않도록 코드에서 막고 있습니다. 요청 빈도는 매시간·최근 7일치로 제한합니다.
+- 게시판 구조가 바뀌면 `scripts/discover_boards.py`로 주소를 다시 찾고, 상세 파서는 `app/crawlers/scnu.py`에서 고칩니다.
+- 분류·마감일은 참고용입니다. 화면에서 항상 원문 링크로 재확인하도록 안내합니다.
+- `ADMIN_API_KEY`, VAPID 비밀키, 공공데이터 키는 저장소에 올리지 않습니다(서버 `.env`, 권한 0600).

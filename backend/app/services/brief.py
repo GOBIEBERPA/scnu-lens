@@ -204,11 +204,10 @@ def build_brief(
     source: str,
     deadline: str | None,
     targets: list[str],
-    llm_values: dict[str, str] | None = None,
 ) -> list[BriefItem]:
     """입력: 공지 원문과 이미 추출한 마감일·대상, 출력: 칸 순서대로 채운 결과 목록.
 
-    칸마다 [라벨 → 패턴 → 보조 정보 → LLM] 순으로 시도하고, 검증을 통과한 첫 값을 쓴다.
+    칸마다 [라벨 → 패턴 → 보조 정보] 순으로 시도하고, 검증을 통과한 첫 값을 쓴다.
     """
     lines = [line for line in raw_text.splitlines() if line.strip()]
     # '화학교육과 공지' → '화학교육과'. '순천대 학사공지'처럼 붙어 있는 이름은 그대로 둔다.
@@ -227,7 +226,6 @@ def build_brief(
         attempts: list[tuple[str, Callable[[], str | None]]] = [
             ("label", lambda spec=spec: _from_labels(lines, spec)),
             *fallbacks.get(spec.name, []),
-            ("llm", lambda spec=spec: (llm_values or {}).get(spec.name)),
         ]
         chosen: BriefItem | None = None
         for method, attempt in attempts:

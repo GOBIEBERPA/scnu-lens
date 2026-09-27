@@ -104,14 +104,9 @@ class LocalNoticeClassifier:
     _load_attempted = False
 
     def __init__(self, settings: Settings) -> None:
-        """입력: 앱 설정, 출력 없음; 임베딩 모델을 로드하고 LLM 보강 여부를 결정한다."""
+        """입력: 앱 설정, 출력 없음; 임베딩 모델을 로드한다."""
         self.settings = settings
         type(self)._ensure_model()
-        self.llm = None
-        if settings.llm_enabled:
-            from app.services.llm import LlmStructurer
-
-            self.llm = LlmStructurer(settings)
 
     @classmethod
     def _ensure_model(cls) -> None:
@@ -131,27 +126,10 @@ class LocalNoticeClassifier:
             cls._label_matrix = None
 
     async def structure_notice(self, notice: Notice) -> NoticeStructured:
-        """입력: 원문 공지, 출력: 규칙 기반 결과에 검증된 LLM 제안만 반영한 구조화 결과."""
+        """입력: 원문 공지, 출력: 임베딩 분류와 규칙 추출로 만든 구조화 결과."""
         # 소스 정보는 DB에서 늦게 불러오므로, 세션이 있는 이 스레드에서 미리 읽어 넘긴다.
         source_category = source_locked_category(notice)
-        base = await asyncio.to_thread(self._structure_notice_sync, notice, source_category)
-        if self.llm is None:
-            return base
-        published = notice.published_at.date() if notice.published_at else None
-        # 소스가 정한 분야와 확정 키워드로 정해진 카테고리는 신뢰도가 높아 LLM 제안보다 우선한다.
-        locked = source_category or self._strong_keyword_category(
-            f"{notice.title} {notice.raw_text}", notice.title
-        )
-        refined = await self.llm.refine(base, notice.title, notice.raw_text, published)
-        if locked:
-            refined = refined.model_copy(update={"category": locked})
-        # 규칙으로 못 채운 칸만 LLM에게 묻고, 원문에 그대로 있는 값만 받는다.
-        missing = [field.label for field in refined.brief if not field.found]
-        if missing:
-            filled = await self.llm.fill_brief(missing, notice.title, notice.raw_text)
-            if filled:
-                refined = refined.model_copy(update={"brief": self._brief(notice, refined, filled)})
-        return refined
+        return await asyncio.to_thread(self._structure_notice_sync, notice, source_category)
 
     def _structure_notice_sync(self, notice: Notice, source_category: object = READ_FROM_NOTICE) -> NoticeStructured:
         """입력: 원문 공지·(미리 읽은) 소스 고정 분야, 출력: 카테고리·마감일·대상·키워드와 정해진 칸을 채운 구조화 결과.
@@ -186,7 +164,7 @@ class LocalNoticeClassifier:
         )
 
     @staticmethod
-    def _brief(notice: Notice, structured: NoticeStructured, llm_values: dict[str, str] | None = None) -> list[BriefField]:
+    def _brief(notice: Notice, structured: NoticeStructured) -> list[BriefField]:
         """입력: 공지·구조화 결과·LLM이 찾은 값, 출력: 정해진 칸 순서대로 채운 상세 정보."""
         items = build_brief(
             notice.title,
@@ -194,7 +172,6 @@ class LocalNoticeClassifier:
             notice.source,
             structured.deadline,
             structured.target_students + structured.target_departments,
-            llm_values,
         )
         return [BriefField(label=i.label, value=i.value, found=i.found, method=i.method) for i in items]
 
@@ -479,12 +456,10 @@ def _matched_interests(user: UserProfile, notice: Notice) -> list[str]:
     targets = [*structured.get("target_departments", []), *structured.get("target_students", [])]
     head = f"{notice.title} {' '.join(targets)}".lower()
     body = (notice.raw_text or "").lower()
-    # LLM이 켜져 있으면 정해진 목록에서 고른 주제가 들어 있다(본문에 그 단어가 없어도 됨).
-    topics = set(structured.get("topics", []))
     matched: list[str] = []
     for interest in user.interests:
         terms = (interest, *INTEREST_SYNONYMS.get(interest.strip().lower(), ()))
-        in_head = any(_contains_term(term, head) for term in terms) or any(t.lower() in topics for t in terms)
+        in_head = any(_contains_term(term, head) for term in terms)
         # 합이 아니라 가장 많이 나온 한 단어로 센다. "생성형 AI" 한 구절이 'ai'·'생성형' 두 번으로 세어지지 않게.
         if in_head or max(_term_hits(term, body) for term in terms) >= BODY_ONLY_MIN_HITS:
             matched.append(interest)

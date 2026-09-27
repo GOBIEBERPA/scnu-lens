@@ -100,7 +100,7 @@ export default function EvalPage() {
         <div>
           <p className="eyebrow">ACCURACY CHECK</p>
           <h1>분류 정확도 채점</h1>
-          <p>공지마다 정답 분류와 마감일을 확인해 두면, 규칙을 고치거나 LLM을 켤 때마다 같은 정답지로 몇 점인지 바로 비교할 수 있어요.</p>
+          <p>공지마다 정답 분류와 마감일을 확인해 두면, 규칙을 고칠 때마다 같은 정답지로 몇 점인지 바로 비교할 수 있어요.</p>
         </div>
       </section>
 

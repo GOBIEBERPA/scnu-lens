@@ -339,18 +339,6 @@ def calendar_events(
     return sorted(events, key=lambda event: (event["date"], order[event["kind"]], event["title"]))
 
 
-@router.get("/calendar/{web_device_id}.ics")
-def my_calendar(web_device_id: str, db: Session = Depends(get_db)) -> Response:
-    """입력: 기기 ID, 출력: 나에게 해당되는 공지와 저장한 공지의 마감 일정 구독용 .ics."""
-    user = find_user(db, web_device_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="프로필을 찾을 수 없습니다.")
-    notices = {notice.id: notice for notice, _ in _matched_for(db, user, include_closed=True)}
-    for notice in db.scalars(select(Notice).where(Notice.id.in_(user.saved_notice_ids or []))):
-        notices.setdefault(notice.id, notice)
-    return _ics(build_calendar(list(notices.values())))
-
-
 @router.get("/notices/{notice_id}", response_model=NoticeResponse)
 def get_notice(notice_id: int, db: Session = Depends(get_db)) -> Notice:
     """입력: 공지 ID, 출력: 해당 공지; 없으면 404."""

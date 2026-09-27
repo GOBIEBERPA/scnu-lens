@@ -16,12 +16,6 @@ class Settings(BaseSettings):
     vapid_public_key: str = ""
     vapid_private_key: str = ""
     vapid_subject: str = "mailto:scnu-lens@example.com"
-    llm_enabled: bool = False
-    llm_base_url: str = "http://localhost:11434"
-    llm_model: str = "qwen2.5:3b-instruct"
-    llm_timeout_seconds: float = 90.0
-    # 0이면 Ollama가 정한다. CPU 서버에서는 코어 하나를 API 응답용으로 남겨 두는 편이 좋다.
-    llm_num_threads: int = Field(default=0, ge=0, le=64)
     admin_api_key: str = "local-admin-key"
     scheduler_enabled: bool = True
     crawl_cron_hours: str = "8,13,19"
