@@ -68,7 +68,9 @@
 
 ## 🖼 스크린샷
 
-`docs/screenshots/` 폴더에 화면 캡처를 넣습니다.
+| 30초 설정 (`컴공` → 컴퓨터공학전공) | 나에게 (추천 이유) | 정리 카드 | 캘린더 |
+|---|---|---|---|
+| <img src="docs/screenshots/1-onboarding.png" width="200"> | <img src="docs/screenshots/2-for-me.png" width="200"> | <img src="docs/screenshots/3-detail.png" width="200"> | <img src="docs/screenshots/4-calendar.png" width="200"> |
 
 ---
 
