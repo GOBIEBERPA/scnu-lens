@@ -50,12 +50,19 @@ def _description(notice: Notice) -> str:
 
 
 def notice_dates(notice: Notice) -> list[tuple[date, str, str]]:
-    """입력: 공지, 출력: (날짜, 종류, 라벨) 목록. 종류는 deadline(마감)·exam(시험)·result(발표).
+    """입력: 공지, 출력: (날짜, 종류, 라벨) 목록. 종류는 open(접수 시작)·deadline(마감)·exam(시험)·result(발표).
 
-    마감일과, 시험 일정 공지의 시험일·발표일을 한데 모은다. 캘린더 화면과 .ics가 같이 쓴다.
+    접수 시작일·마감일과, 시험 일정 공지의 시험일·발표일을 한데 모은다. 캘린더 화면과 .ics가 같이 쓴다.
     """
     found: list[tuple[date, str, str]] = []
     deadline = _deadline(notice)
+    opens = (notice.structured_json or {}).get("open_at")
+    try:
+        opened = date.fromisoformat(str(opens)[:10]) if opens else None
+    except ValueError:
+        opened = None
+    if opened and (deadline is None or opened < deadline):
+        found.append((opened, "open", "접수 시작"))
     if deadline:
         found.append((deadline, "deadline", "마감"))
     for item in (notice.structured_json or {}).get("schedule", []):

@@ -16,7 +16,7 @@ import {
   setNoticeSaved,
 } from "@/lib/api";
 import { getDeviceId } from "@/lib/device";
-import { deadlineLabel, SUGGESTED_INTERESTS } from "@/lib/notice-format";
+import { applyStatus, SUGGESTED_INTERESTS } from "@/lib/notice-format";
 import { disablePush, enablePush, pushPermission, pushSupported } from "@/lib/push";
 import type { AlertPref, MatchedNotice, Notice, Profile } from "@/lib/types";
 
@@ -347,7 +347,7 @@ export function MyPage() {
         ) : (
           <ul className="me-matched">
             {saved.map((notice) => {
-              const deadline = deadlineLabel(notice.structured_json?.deadline);
+              const deadline = applyStatus(notice.structured_json)?.text;
               return (
                 <li key={notice.id} className="saved-row">
                   <a href={`/?notice=${notice.id}`}>

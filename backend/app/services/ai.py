@@ -154,6 +154,9 @@ class LocalNoticeClassifier:
             contact=None,
         )
         open_at, close_at = extract_window(notice.raw_text)
+        if not open_at:  # 학교 공지는 "신청기간: A ~ B" 모양이라 여기서 시작일을 찾는다
+            open_at = extract_apply_start(f"{notice.title} {body_only(notice.raw_text)}", published, structured.deadline) \
+                or extract_apply_start(text, published, structured.deadline)
         return structured.model_copy(
             update={
                 "brief": self._brief(notice, structured),
@@ -280,6 +283,29 @@ def extract_deadline(text: str, published: date | None) -> str | None:
             continue
         # "접수기간: 9.14 ~ 9.29"처럼 범위면 뒤쪽 날짜가 마감이다.
         return dates[-1][1]
+    return None
+
+
+def extract_apply_start(text: str, published: date | None, deadline: str | None) -> str | None:
+    """입력: 공지 전문·게시일·마감일, 출력: 신청기간의 시작일(ISO) 또는 None.
+
+    "신청기간: 10.12 ~ 10.16"처럼 신청 라벨 뒤 범위의 앞 날짜다. 마감일과 같은 범위일 때만 받는다
+    (다른 문장의 날짜를 시작일로 착각하지 않게). 이게 있어야 "접수 전"과 "접수중"을 나눌 수 있다.
+    """
+    flat = " ".join(text.split())
+    for label in APPLY_LABEL_RE.finditer(flat):
+        segment = flat[label.end() : label.end() + 60]
+        cut = EVENT_LABEL_RE.search(segment)
+        dates = _dates_in(segment[: cut.start()] if cut else segment, published)
+        if len(dates) < 2 or dates[0][0] > LABEL_TO_DATE_GAP or START_WORD_RE.search(segment[: dates[0][0]]):
+            continue
+        # "필기 원서접수: A ~ B 필기 시험일: C ~ D"처럼 뒤에 다른 일정이 붙어도, 마감일이 이 조각 안에 있으면 A가 시작이다.
+        start, days = dates[0][1], [day for _, day in dates]
+        if deadline is None:
+            if start < days[1]:
+                return start
+        elif deadline in days[1:] and start < deadline:
+            return start
     return None
 
 

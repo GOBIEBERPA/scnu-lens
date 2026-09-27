@@ -65,3 +65,30 @@ def test_interest_only_once_in_body_is_ignored() -> None:
     course = Notice(title="AI 부트캠프 참가자 모집", raw_text="교육 과정 안내", source="학사공지", category="행사", structured_json={})
     assert relevance_score(user, job) == 0
     assert relevance_score(user, course) >= 2.0
+
+
+def test_apply_start_from_period() -> None:
+    """입력: '신청기간 A ~ B' 공지들, 출력: A가 접수 시작일, '~까지'만 있거나 행사 일시 범위면 시작일 없음."""
+    from datetime import date
+
+    from app.services.ai import extract_apply_start, extract_deadline
+
+    day = date(2026, 9, 20)
+    for text, start in [
+        ("신청기간 : 2026. 9. 22.(화) 10:00 ~ 2026. 9. 29.(화) 17:00까지", "2026-09-22"),
+        ("접수: 2026-10-12 ~ 2026-10-16", "2026-10-12"),
+        ("신청기간: 2026. 9. 21.(월) ~ 10. 8.(목)", "2026-09-21"),
+        ("접수기간: 10월 5일까지", None),
+        ("일시: 10.3 ~ 10.5, 신청: 9.30까지", None),
+    ]:
+        assert extract_apply_start(text, day, extract_deadline(text, day)) == start
+
+
+def test_apply_start_with_exam_dates_after() -> None:
+    """입력: 큐넷 모양 '필기 원서접수: A ~ B' 다음 줄에 시험일 범위, 출력: A가 접수 시작일."""
+    from datetime import date
+
+    from app.services.ai import extract_apply_start
+
+    text = "필기 원서접수: 2026-09-30 ~ 2026-10-01\n필기 시험일: 2026-10-06 ~ 2026-10-08\n접수는 2026-10-01까지입니다."
+    assert extract_apply_start(text, date(2026, 9, 20), "2026-10-01") == "2026-09-30"

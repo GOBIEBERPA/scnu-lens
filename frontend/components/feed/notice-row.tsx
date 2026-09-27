@@ -1,5 +1,5 @@
 import { SaveButton } from "@/components/feed/save-button";
-import { categoryClass, deadlineLabel, formatDate } from "@/lib/notice-format";
+import { applyStatus, categoryClass, formatDate } from "@/lib/notice-format";
 import type { Notice } from "@/lib/types";
 
 type Props = {
@@ -14,8 +14,7 @@ type Props = {
 // 입력: 공지·열기 동작·저장 상태·매칭 이유, 출력: 제목·분야·출처·날짜와 D-day·별표만 있는 목록 한 줄.
 // 기간·대상 같은 자세한 칸은 상세 창에서 본다(목록은 훑어보기용으로 짧게).
 export function NoticeRow({ notice, onOpen, saved, onToggleSave, reason }: Props) {
-  const deadline = deadlineLabel(notice.structured_json?.deadline);
-  const urgent = deadline === "오늘 마감" || /^D-[0-3]$/.test(deadline ?? "");
+  const status = applyStatus(notice.structured_json);
   const others = notice.also_in?.length ?? 0;
   return (
     <li className="row">
@@ -30,8 +29,7 @@ export function NoticeRow({ notice, onOpen, saved, onToggleSave, reason }: Props
         </p>
       </div>
       <div className="row-side">
-        {deadline && deadline !== "마감됨" && <span className={`row-dday ${urgent ? "urgent" : ""}`}>{deadline}</span>}
-        {deadline === "마감됨" && <span className="row-dday closed">마감</span>}
+        {status && <span className={`row-dday ${status.tone}`}>{status.text}</span>}
         <SaveButton saved={saved} onToggle={onToggleSave} />
       </div>
     </li>

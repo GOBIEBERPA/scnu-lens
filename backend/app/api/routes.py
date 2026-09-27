@@ -334,8 +334,8 @@ def calendar_events(
                     {"date": day.isoformat(), "kind": kind, "label": label, "notice_id": notice.id,
                      "title": notice.title, "category": notice.category}
                 )
-    # 같은 날 안에서는 마감 → 시험 → 발표 순서로 보여준다.
-    order = {"deadline": 0, "exam": 1, "result": 2}
+    # 같은 날 안에서는 마감 → 접수 시작 → 시험 → 발표 순서로 보여준다.
+    order = {"deadline": 0, "open": 1, "exam": 2, "result": 3}
     return sorted(events, key=lambda event: (event["date"], order[event["kind"]], event["title"]))
 
 

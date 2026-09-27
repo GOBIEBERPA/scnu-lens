@@ -129,6 +129,7 @@ export function CalendarPage() {
           <button type="button" role="tab" aria-selected={scope === "mine"} className={scope === "mine" ? "active" : ""} onClick={() => chooseScope("mine")}>내 공지·저장</button>
         </div>
         <p className="calendar-legend">
+          <span><i className="dot open" />접수 시작</span>
           <span><i className="dot deadline" />마감일</span>
           <span><i className="dot exam" />시험</span>
           <span><i className="dot result" />발표</span>
@@ -192,7 +193,7 @@ export function CalendarPage() {
                   })() : <span className={`kind-badge ${event.kind}`}>{event.label}</span>}
                   <span className="agenda-title">
                     {/* 시험일·발표일 항목에서 "원서접수"는 틀린 말이라 뗀다. */}
-                    <strong>{event.kind === "deadline" ? event.title : event.title.replace(/\s*원서접수$/, "")}</strong>
+                    <strong>{event.kind === "deadline" || event.kind === "open" ? event.title : event.title.replace(/\s*원서접수$/, "")}</strong>
                     <CategoryTag category={event.category} />
                   </span>
                   <ChevronRight size={16} />

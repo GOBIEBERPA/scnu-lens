@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CategoryTag } from "@/components/category-tag";
 import { SaveButton } from "@/components/feed/save-button";
 import { noticeCalendarUrl } from "@/lib/api";
-import { alarmPlan, deadlineLabel, formatDate } from "@/lib/notice-format";
+import { alarmPlan, applyPeriod, applyStatus, deadlineLabel, formatDate } from "@/lib/notice-format";
 import type { Notice } from "@/lib/types";
 
 type Props = { notice: Notice; onClose: () => void; saved: boolean; onToggleSave: () => void };
@@ -34,6 +34,8 @@ function originLabel(url: string): string {
 // 입력: 선택된 공지·닫기 동작·저장 상태, 출력: 정해진 칸(대상·기간·신청방법…)과 원문·캘린더 버튼이 있는 상세 창.
 export function NoticeDetail({ notice, onClose, saved, onToggleSave }: Props) {
   const deadline = deadlineLabel(notice.structured_json?.deadline);
+  const status = applyStatus(notice.structured_json);
+  const period = applyPeriod(notice.structured_json);
   const brief = notice.structured_json?.brief || [];
   const found = brief.filter((field) => field.found);
   const missing = brief.filter((field) => !field.found);
@@ -72,7 +74,8 @@ export function NoticeDetail({ notice, onClose, saved, onToggleSave }: Props) {
         <div className="detail-meta">
           <span>{notice.source}</span>
           <span>{formatDate(notice.published_at)}</span>
-          {deadline && <span className="detail-deadline"><CalendarClock size={13} /> {deadline}</span>}
+          {status && <span className={`detail-deadline ${status.tone}`}><CalendarClock size={13} /> {status.text}</span>}
+          {period && <span>신청 {period}</span>}
         </div>
         {notice.also_in && notice.also_in.length > 0 && (
           <p className="also-in">같은 공지가 {notice.also_in.join(", ")}에도 올라왔어요.</p>

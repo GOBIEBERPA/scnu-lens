@@ -88,3 +88,36 @@ export function deadlineLabel(deadline?: string | null): string | null {
   if (days === 0) return "오늘 마감";
   return `D-${days}`;
 }
+
+export type ApplyTone = "before" | "open" | "plain" | "urgent" | "closed";
+
+// 입력: "YYYY-MM-DD…", 출력: "10/12".
+function shortDay(value: string): string {
+  const [, month, day] = value.slice(0, 10).split("-").map(Number);
+  return `${month}/${day}`;
+}
+
+// 입력: 구조화 결과(마감일·접수 시작), 출력: 접수 상태 글자와 색 종류.
+// 신청기간이 "10.12 ~ 10.16"이면 시작 전에는 D-day 대신 "10/12 접수 시작"을 보여준다(열리기 전에 들어가 헛걸음하지 않게).
+export function applyStatus(structured?: { deadline?: string | null; open_at?: string | null } | null): { text: string; tone: ApplyTone } | null {
+  const deadline = deadlineLabel(structured?.deadline);
+  const opens = structured?.open_at?.slice(0, 10);
+  if (opens && (!structured?.deadline || opens < structured.deadline)) {
+    const start = new Date(`${opens}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start.getTime() > today.getTime()) return { text: `${shortDay(opens)} 접수 시작`, tone: "before" };
+  }
+  if (!deadline) return null;
+  if (deadline === "마감됨") return { text: "마감", tone: "closed" };
+  const urgent = deadline === "오늘 마감" || /^D-[0-3]$/.test(deadline);
+  if (opens) return { text: `접수중 ${deadline}`, tone: urgent ? "urgent" : "open" };
+  return { text: deadline, tone: urgent ? "urgent" : "plain" };
+}
+
+// 입력: 구조화 결과, 출력: "9/22 ~ 9/29" 같은 신청기간(시작일을 모르면 null).
+export function applyPeriod(structured?: { deadline?: string | null; open_at?: string | null } | null): string | null {
+  const opens = structured?.open_at;
+  const deadline = structured?.deadline;
+  return opens && deadline && opens.slice(0, 10) < deadline ? `${shortDay(opens)} ~ ${shortDay(deadline)}` : null;
+}
