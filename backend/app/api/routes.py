@@ -128,21 +128,37 @@ def _urgent_filter() -> list:
     return [Notice.deadline_date >= today.isoformat(), Notice.deadline_date <= (today + timedelta(days=URGENT_DAYS)).isoformat()]
 
 
+def _status_filter(status: str | None) -> list:
+    """입력: open(접수중)·upcoming(접수 예정)·None, 출력: 조건 목록.
+
+    접수중 = 마감 전이고, 시작일을 모르거나 이미 시작했다. 접수 예정 = 시작일이 아직 안 왔다.
+    """
+    today = date.today().isoformat()
+    if status == "open":
+        return [Notice.deadline_date >= today, or_(Notice.open_date.is_(None), Notice.open_date <= today)]
+    if status == "upcoming":
+        return [Notice.open_date > today]
+    return []
+
+
 @router.get("/notices", response_model=NoticeListResponse)
 def list_notices(
     category: str | None = None,
     search: str | None = None,
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=50),
-    sort: Literal["latest", "deadline"] = "latest",
+    sort: Literal["latest", "deadline", "opening", "roomy"] = "latest",
     due: Literal["today", "urgent"] | None = None,
     origin: Literal["school", "external"] | None = None,
     hide_closed: bool = False,
+    status: Literal["open", "upcoming"] | None = None,
     db: Session = Depends(get_db),
 ) -> NoticeListResponse:
-    """입력: 카테고리·검색·페이지·정렬·빠른 필터·출처·마감 지난 공지 숨김, 출력: 공지 한 페이지와 사용 가능한 카테고리.
+    """입력: 카테고리·검색·페이지·정렬·빠른 필터·출처·마감 지난 공지 숨김·접수 상태, 출력: 공지 한 페이지와 사용 가능한 카테고리.
 
     sort=deadline은 아직 마감 전인 공지만 마감이 가까운 순서로 보여준다.
+    sort=opening은 아직 접수 전인 공지를 접수 시작이 빠른 순서로, roomy는 마감 전 공지를 마감이 먼 순서(여유 있는 순)로 보여준다.
+    status=open은 지금 신청할 수 있는 공지(접수중), upcoming은 아직 접수 전인 공지만 보여준다.
     due=today는 오늘 올라온 공지, due=urgent는 3일 안에 마감되는 공지만 보여준다(상단 지표를 누를 때).
     origin=school은 학교 게시판, external은 공모전 모음·시험 일정만 보여준다.
     hide_closed=true면 마감일이 지난 공지를 뺀다(마감일이 없는 공지는 남긴다).
@@ -160,9 +176,16 @@ def list_notices(
         filters += [Notice.published_at >= start, Notice.published_at < end]
     elif due == "urgent":
         filters += _urgent_filter()
+    filters += _status_filter(status)
     if sort == "deadline":
         filters.append(Notice.deadline_date >= date.today().isoformat())
         order = (Notice.deadline_date.asc(), Notice.published_at.desc(), Notice.id.desc())
+    elif sort == "opening":
+        filters.append(Notice.open_date > date.today().isoformat())
+        order = (Notice.open_date.asc(), Notice.deadline_date.asc(), Notice.id.desc())
+    elif sort == "roomy":
+        filters.append(Notice.deadline_date >= date.today().isoformat())
+        order = (Notice.deadline_date.desc(), Notice.published_at.desc(), Notice.id.desc())
     else:
         order = (Notice.published_at.desc(), Notice.id.desc())
     total = db.scalar(select(func.count()).select_from(Notice).where(*filters)) or 0
@@ -199,6 +222,11 @@ def notice_stats(db: Session = Depends(get_db)) -> dict[str, object]:
         "urgent_by_origin": {
             "school": _count(db, *_urgent_filter(), *_origin_filter("school")),
             "external": _count(db, *_urgent_filter(), *_origin_filter("external")),
+        },
+        # "접수중"·"접수 예정" 칩 숫자.
+        "status_by_origin": {
+            origin: {status: _count(db, *_status_filter(status), *_origin_filter(origin)) for status in ("open", "upcoming")}
+            for origin in ("school", "external")
         },
     }
 
@@ -328,14 +356,24 @@ def calendar_events(
         base.append(Notice.id.in_(ids))
     events = []
     for notice in db.scalars(select(Notice).where(*base)):
-        for day, kind, label in notice_dates(notice):
+        dates = notice_dates(notice)
+        for day, kind, label in dates:
             if start <= day <= end:
                 events.append(
                     {"date": day.isoformat(), "kind": kind, "label": label, "notice_id": notice.id,
                      "title": notice.title, "category": notice.category}
                 )
+        # 신청기간(접수 시작~마감)이 이 기간과 겹치면 한 건으로 넣는다. 화면은 점을 찍지 않고 "이날 접수중" 목록에만 쓴다.
+        opened = next((day for day, kind, _ in dates if kind == "open"), None)
+        closes = next((day for day, kind, _ in dates if kind == "deadline"), None)
+        # 목록에서 내린(archived) 공지는 지금 신청할 것으로 권하지 않는다.
+        if opened and closes and opened <= end and closes >= start and notice.processing_status == "structured":
+            events.append(
+                {"date": opened.isoformat(), "end": closes.isoformat(), "kind": "period", "label": "접수중",
+                 "notice_id": notice.id, "title": notice.title, "category": notice.category}
+            )
     # 같은 날 안에서는 마감 → 접수 시작 → 시험 → 발표 순서로 보여준다.
-    order = {"deadline": 0, "open": 1, "exam": 2, "result": 3}
+    order = {"deadline": 0, "open": 1, "exam": 2, "result": 3, "period": 4}
     return sorted(events, key=lambda event: (event["date"], order[event["kind"]], event["title"]))
 
 

@@ -78,7 +78,9 @@ export function CalendarPage() {
 
   const byDay = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
-    for (const event of events) map.set(event.date, [...(map.get(event.date) || []), event]);
+    for (const event of events) {
+      if (event.kind !== "period") map.set(event.date, [...(map.get(event.date) || []), event]);
+    }
     return map;
   }, [events]);
 
@@ -101,7 +103,12 @@ export function CalendarPage() {
   }
 
   const selectedEvents = byDay.get(selected) || [];
-  const monthCount = events.filter((event) => event.date.startsWith(iso(month).slice(0, 7))).length;
+  const monthCount = events.filter((event) => event.kind !== "period" && event.date.startsWith(iso(month).slice(0, 7))).length;
+  // 고른 날에 신청 기간 안인 공지. 그날 시작·마감이라 위에 이미 나온 공지는 뺀다.
+  const shownIds = new Set(selectedEvents.map((event) => event.notice_id));
+  const ongoing = events
+    .filter((event) => event.kind === "period" && event.date <= selected && selected <= (event.end ?? "") && !shownIds.has(event.notice_id))
+    .sort((a, b) => (a.end ?? "").localeCompare(b.end ?? ""));
   const selectedDate = new Date(`${selected}T00:00:00`);
 
   return (
@@ -181,7 +188,7 @@ export function CalendarPage() {
           {selected === today && <span className="today-badge">오늘</span>}
         </h2>
         {selectedEvents.length === 0 ? (
-          <p className="me-help">{scope === "mine" ? "이날은 내 공지·저장한 공지 일정이 없어요." : "이날은 일정이 없어요."}</p>
+          ongoing.length === 0 && <p className="me-help">{scope === "mine" ? "이날은 내 공지·저장한 공지 일정이 없어요." : "이날은 일정이 없어요."}</p>
         ) : (
           <ul>
             {selectedEvents.map((event) => (
@@ -201,6 +208,28 @@ export function CalendarPage() {
               </li>
             ))}
           </ul>
+        )}
+        {ongoing.length > 0 && (
+          <>
+            <h3 className="ongoing-head">{selected === today ? "지금 접수중" : "이날 접수중"} <em>{ongoing.length}건</em></h3>
+            <ul>
+              {ongoing.map((event) => {
+                const badge = deadlineBadge(event.end ?? event.date, selected);
+                return (
+                  <li key={`${event.notice_id}-period`}>
+                    <Link href={`/?notice=${event.notice_id}`}>
+                      <span className="kind-badge open">{badge.text}</span>
+                      <span className="agenda-title">
+                        <strong>{event.title}</strong>
+                        <CategoryTag category={event.category} />
+                      </span>
+                      <ChevronRight size={16} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </section>
     </main>

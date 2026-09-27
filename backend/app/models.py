@@ -62,6 +62,8 @@ class Notice(Base):
     # 모든 알림 대상을 읽지 않고 "곧 시작·마감하는 공지"만 DB에서 바로 고르게 한다.
     open_at: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
     close_at: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
+    # 신청기간 시작일(YYYY-MM-DD). 시각을 몰라도 채운다. "접수중·접수 예정" 필터와 "접수 시작순" 정렬에 쓴다.
+    open_date: Mapped[str | None] = mapped_column(String(10), nullable=True, index=True)
 
     crawler_source: Mapped[CrawlerSource | None] = relationship(back_populates="notices")
     briefings: Mapped[list["Briefing"]] = relationship(back_populates="notice", cascade="all, delete-orphan")

@@ -3,7 +3,9 @@ import { Search, X } from "lucide-react";
 import type { FeedView } from "@/components/feed/hooks";
 import { CATEGORY_ORDER } from "@/lib/notice-format";
 
-type Sort = "latest" | "deadline";
+// recommend는 "나에게" 탭에서만(추천 점수 순).
+export type FeedSort = "recommend" | "latest" | "deadline" | "opening" | "roomy";
+export type ApplyFilter = "open" | "upcoming" | null;
 
 type Props = {
   view: FeedView;
@@ -19,8 +21,12 @@ type Props = {
   urgentCount: number;
   urgentOnly: boolean;
   onUrgent: (on: boolean) => void;
-  sort: Sort;
-  onSort: (sort: Sort) => void;
+  // 접수중·접수 예정 칩과 그 숫자.
+  status: ApplyFilter;
+  onStatus: (status: ApplyFilter) => void;
+  statusCounts: { open: number; upcoming: number };
+  sort: FeedSort;
+  onSort: (sort: FeedSort) => void;
 };
 
 const TABS: { value: FeedView; label: string }[] = [
@@ -29,12 +35,22 @@ const TABS: { value: FeedView; label: string }[] = [
   { value: "external", label: "공모전·자격증" },
 ];
 
-// 입력: 탭·검색·분야·정렬 상태와 변경 함수, 출력: 탭 한 줄, 검색창, 분야 칩 한 줄(마감임박·정렬 포함).
-// 예전의 지표 타일·출처 탭·정렬/개수 선택·상태 줄을 이 세 줄로 합쳤다.
+const SORT_LABELS: Record<FeedSort, string> = {
+  recommend: "추천순",
+  latest: "최신순",
+  deadline: "마감 임박순",
+  opening: "접수 시작순",
+  roomy: "마감 여유순",
+};
+
+// 입력: 탭·검색·분야·접수 상태·정렬 상태와 변경 함수, 출력: 탭 한 줄, 검색창, 칩 한 줄(마감임박·접수중·접수 예정·분야)과 정렬 선택.
 export function FeedControls(props: Props) {
   const { view, onView, tabCounts, search, onSearch, counts, category, onCategory } = props;
-  const { urgentCount, urgentOnly, onUrgent, sort, onSort } = props;
-  const categories = CATEGORY_ORDER.filter((name) => counts[name]);
+  const { urgentCount, urgentOnly, onUrgent, status, onStatus, statusCounts, sort, onSort } = props;
+  const mine = view === "mine";
+  const categories = mine ? [] : CATEGORY_ORDER.filter((name) => counts[name]);
+  const sorts: FeedSort[] = mine ? ["recommend", "deadline", "opening", "roomy"] : ["latest", "deadline", "opening", "roomy"];
+  const plain = category === "전체" && !urgentOnly && !status;
   return (
     <div className="feed-controls">
       <div className="tabs" role="tablist" aria-label="공지 보기">
@@ -53,46 +69,53 @@ export function FeedControls(props: Props) {
         ))}
       </div>
 
-      {view !== "mine" && (
-        <>
-          <label className="search">
-            <Search size={16} />
-            <input
-              value={search}
-              onChange={(event) => onSearch(event.target.value)}
-              placeholder="검색"
-              enterKeyHint="search"
-              aria-label="제목·본문·첨부파일 검색"
-            />
-            {search && <button type="button" onClick={() => onSearch("")} aria-label="검색어 지우기"><X size={14} /></button>}
-          </label>
-          <div className="chips" role="toolbar" aria-label="분야와 정렬">
-            <div className="chips-scroll">
-              <button type="button" className={category === "전체" && !urgentOnly ? "active" : ""} onClick={() => { onCategory("전체"); onUrgent(false); }}>
-                전체
-              </button>
-              {urgentCount > 0 && (
-                <button type="button" className={`urgent ${urgentOnly ? "active" : ""}`} aria-pressed={urgentOnly} onClick={() => onUrgent(!urgentOnly)}>
-                  마감임박 {urgentCount}
-                </button>
-              )}
-              {categories.map((name) => (
-                <button type="button" key={name} className={category === name ? "active" : ""} aria-pressed={category === name} onClick={() => onCategory(category === name ? "전체" : name)}>
-                  {name}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="sort"
-              onClick={() => onSort(sort === "latest" ? "deadline" : "latest")}
-              aria-label={`정렬: ${sort === "latest" ? "최신순" : "마감순"} (누르면 바뀜)`}
-            >
-              {sort === "latest" ? "최신순" : "마감순"}
-            </button>
-          </div>
-        </>
+      {!mine && (
+        <label className="search">
+          <Search size={16} />
+          <input
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder="검색"
+            enterKeyHint="search"
+            aria-label="제목·본문·첨부파일 검색"
+          />
+          {search && <button type="button" onClick={() => onSearch("")} aria-label="검색어 지우기"><X size={14} /></button>}
+        </label>
       )}
+      <div className="chips" role="toolbar" aria-label="접수 상태·분야와 정렬">
+        <div className="chips-scroll">
+          <button type="button" className={plain ? "active" : ""} onClick={() => { onCategory("전체"); onUrgent(false); onStatus(null); }}>
+            전체
+          </button>
+          {urgentCount > 0 && (
+            <button type="button" className={`urgent ${urgentOnly ? "active" : ""}`} aria-pressed={urgentOnly} onClick={() => onUrgent(!urgentOnly)}>
+              마감임박 {urgentCount}
+            </button>
+          )}
+          {statusCounts.open > 0 && (
+            <button type="button" className={`status-open ${status === "open" ? "active" : ""}`} aria-pressed={status === "open"}
+              onClick={() => onStatus(status === "open" ? null : "open")}>
+              접수중 {statusCounts.open}
+            </button>
+          )}
+          {statusCounts.upcoming > 0 && (
+            <button type="button" className={`status-upcoming ${status === "upcoming" ? "active" : ""}`} aria-pressed={status === "upcoming"}
+              onClick={() => onStatus(status === "upcoming" ? null : "upcoming")}>
+              접수 예정 {statusCounts.upcoming}
+            </button>
+          )}
+          {categories.map((name) => (
+            <button type="button" key={name} className={category === name ? "active" : ""} aria-pressed={category === name} onClick={() => onCategory(category === name ? "전체" : name)}>
+              {name}
+            </button>
+          ))}
+        </div>
+        <label className="sort">
+          <select value={sort} onChange={(event) => onSort(event.target.value as FeedSort)} aria-label="정렬">
+            {sorts.map((value) => <option key={value} value={value}>{SORT_LABELS[value]}</option>)}
+          </select>
+        </label>
+      </div>
     </div>
   );
 }

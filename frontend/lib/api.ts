@@ -48,14 +48,16 @@ export type NoticeQuery = {
   search: string;
   page: number;
   perPage: number;
-  // latest: 최신순, deadline: 마감 전 공지만 마감 가까운 순
-  sort: "latest" | "deadline";
+  // latest: 최신순, deadline: 마감 임박순, opening: 접수 시작 빠른 순(접수 전만), roomy: 마감 여유 순
+  sort: "latest" | "deadline" | "opening" | "roomy";
   // today: 오늘 올라온 공지, urgent: 3일 안에 마감
   due: "today" | "urgent" | null;
   // school: 학교 게시판, external: 공모전·시험 일정, null: 전체
   origin: "school" | "external" | null;
   // 마감일이 지난 공지를 뺀다(마감일 없는 공지는 남김).
   hideClosed: boolean;
+  // open: 접수중, upcoming: 접수 예정, null: 전체
+  status: "open" | "upcoming" | null;
 };
 
 export type NoticeStats = {
@@ -65,6 +67,7 @@ export type NoticeStats = {
   categories: Record<string, number>;
   categories_by_origin: { school: Record<string, number>; external: Record<string, number> };
   urgent_by_origin: { school: number; external: number };
+  status_by_origin?: { school: { open: number; upcoming: number }; external: { open: number; upcoming: number } };
 };
 
 // 입력: 분야·검색어·페이지·정렬·빠른 필터·출처, 출력: 조건에 맞는 공지 한 페이지와 전체 개수.
@@ -75,6 +78,7 @@ export async function fetchNotices(query: NoticeQuery): Promise<NoticeList> {
   if (query.due) params.set("due", query.due);
   if (query.origin) params.set("origin", query.origin);
   if (query.hideClosed) params.set("hide_closed", "true");
+  if (query.status) params.set("status", query.status);
   return request<NoticeList>(`/notices?${params}`);
 }
 

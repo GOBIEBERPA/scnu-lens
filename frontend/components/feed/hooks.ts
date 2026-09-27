@@ -22,6 +22,7 @@ export function useNoticeFeed() {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<NoticeQuery["sort"]>("latest");
   const [due, setDue] = useState<NoticeQuery["due"]>(null);
+  const [status, setStatus] = useState<NoticeQuery["status"]>(null);
   // 기본으로 마감 지난 공지는 숨긴다(지금 할 수 있는 것만 보이게). 목록 끝에서 켤 수 있다.
   const [hideClosed, setHideClosed] = useState(true);
   const [total, setTotal] = useState(0);
@@ -66,6 +67,7 @@ export function useNoticeFeed() {
     setView(next);
     setCategory("전체");
     setDue(null);
+    setStatus(null);
     setHideClosed(true);
     setSort(next === "external" ? "deadline" : "latest");
   }
@@ -75,7 +77,7 @@ export function useNoticeFeed() {
     if (view === "mine") return;
     setIsLoading(true);
     try {
-      const data = await fetchNotices({ category, search, page, perPage: PAGE_SIZE, sort, due, origin: view, hideClosed });
+      const data = await fetchNotices({ category, search, page, perPage: PAGE_SIZE, sort, due, origin: view, hideClosed, status });
       setNotices((current) => (page === 1 ? data.items : [...current, ...data.items]));
       setTotal(data.total);
       setLoadError("");
@@ -92,17 +94,17 @@ export function useNoticeFeed() {
     if (!restored) return;
     const timer = window.setTimeout(() => void reload(), page === 1 ? 300 : 0);
     return () => window.clearTimeout(timer);
-  }, [restored, view, category, search, page, sort, due, hideClosed]);
+  }, [restored, view, category, search, page, sort, due, hideClosed, status]);
 
   // 조건이 바뀌면 첫 쪽부터 다시 본다.
   useEffect(() => {
     setPage(1);
-  }, [view, category, search, sort, due, hideClosed]);
+  }, [view, category, search, sort, due, hideClosed, status]);
 
   const hasMore = notices.length < total;
 
   return {
-    notices, view, chooseView, hadSavedView, category, setCategory, search, setSearch, sort, setSort, due, setDue,
+    notices, view, chooseView, hadSavedView, category, setCategory, search, setSearch, sort, setSort, due, setDue, status, setStatus,
     hideClosed, setHideClosed, total, hasMore, loadMore: () => setPage((current) => current + 1),
     isLoading, loadedOnce, loadError, reload,
   };

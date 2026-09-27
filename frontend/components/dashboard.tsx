@@ -3,13 +3,14 @@
 import { CircleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { FeedControls } from "@/components/feed/feed-controls";
+import { FeedControls, type ApplyFilter, type FeedSort } from "@/components/feed/feed-controls";
 import { useNoticeDetail, useNoticeFeed, useSavedNotices, useUnreadCount } from "@/components/feed/hooks";
 import { NoticeDetail } from "@/components/feed/notice-detail";
 import { NoticeRow } from "@/components/feed/notice-row";
 import { TopBar } from "@/components/feed/top-bar";
 import { Onboarding } from "@/components/onboarding";
-import { apiBaseForDisplay, fetchMatchedNotices, fetchNoticeStats, fetchProfile, type NoticeStats } from "@/lib/api";
+import { apiBaseForDisplay, fetchMatchedNotices, fetchNoticeStats, fetchProfile, type NoticeQuery, type NoticeStats } from "@/lib/api";
+import { applyState } from "@/lib/notice-format";
 import { getDeviceId } from "@/lib/device";
 import type { MatchedNotice, Profile } from "@/lib/types";
 
@@ -24,6 +25,7 @@ const EMPTY_STATS: NoticeStats = {
   categories: {},
   categories_by_origin: { school: {}, external: {} },
   urgent_by_origin: { school: 0, external: 0 },
+  status_by_origin: { school: { open: 0, upcoming: 0 }, external: { open: 0, upcoming: 0 } },
 };
 
 // 입력 없음, 출력: 탭(나에게·학교·공모전·자격증) 하나와 공지 목록으로 된 메인 화면.
@@ -44,6 +46,10 @@ export function Dashboard() {
   const saved = useSavedNotices(deviceId);
   const unread = useUnreadCount(deviceId);
   const [onboarding, setOnboarding] = useState(false);
+  // "나에게" 탭은 추천 목록을 한 번에 받으므로 거르기·정렬을 화면에서 한다.
+  const [mineSort, setMineSort] = useState<FeedSort>("recommend");
+  const [mineStatus, setMineStatus] = useState<ApplyFilter>(null);
+  const [mineUrgent, setMineUrgent] = useState(false);
   const unset = profile.department === "미설정" && profile.interests.length === 0;
 
   // 브라우저 최초 진입 시 기기 ID·프로필·추천 공지를 준비한다. 실패해도 공지 목록은 막지 않는다.
@@ -98,6 +104,29 @@ export function Dashboard() {
   const external = feed.view === "external";
   const counts = feed.view === "mine" ? {} : stats.categories_by_origin[external ? "external" : "school"];
   const sum = (values: Record<string, number>) => Object.values(values).reduce((total, count) => total + count, 0);
+  const mine = feed.view === "mine";
+
+  // "나에게" 탭: 접수 상태·마감임박으로 거르고 고른 순서로 정렬한다.
+  const todayIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  const soonIso = new Date(Date.now() + 3 * 86_400_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  const deadlineOf = (item: MatchedNotice) => item.notice.structured_json?.deadline ?? "";
+  const isUrgent = (item: MatchedNotice) => deadlineOf(item) >= todayIso && deadlineOf(item) <= soonIso;
+  const mineCounts = {
+    open: matched.filter((item) => applyState(item.notice.structured_json) === "open").length,
+    upcoming: matched.filter((item) => applyState(item.notice.structured_json) === "upcoming").length,
+  };
+  const mineList = matched
+    .filter((item) => !mineStatus || applyState(item.notice.structured_json) === mineStatus)
+    .filter((item) => !mineUrgent || isUrgent(item))
+    .filter((item) => mineSort === "recommend" || mineSort === "latest" || (mineSort === "opening"
+      ? applyState(item.notice.structured_json) === "upcoming"
+      : deadlineOf(item) >= todayIso))
+    .sort((a, b) => {
+      if (mineSort === "deadline") return deadlineOf(a).localeCompare(deadlineOf(b));
+      if (mineSort === "roomy") return deadlineOf(b).localeCompare(deadlineOf(a));
+      if (mineSort === "opening") return (a.notice.structured_json?.open_at ?? "").localeCompare(b.notice.structured_json?.open_at ?? "");
+      return 0;
+    });
 
   return (
     <div className="app-shell">
@@ -125,11 +154,14 @@ export function Dashboard() {
           counts={counts}
           category={feed.category}
           onCategory={feed.setCategory}
-          urgentCount={feed.view === "mine" ? 0 : stats.urgent_by_origin[external ? "external" : "school"]}
-          urgentOnly={feed.due === "urgent"}
-          onUrgent={(on) => feed.setDue(on ? "urgent" : null)}
-          sort={feed.sort}
-          onSort={feed.setSort}
+          urgentCount={mine ? matched.filter(isUrgent).length : stats.urgent_by_origin[external ? "external" : "school"]}
+          urgentOnly={mine ? mineUrgent : feed.due === "urgent"}
+          onUrgent={(on) => (mine ? setMineUrgent(on) : feed.setDue(on ? "urgent" : null))}
+          status={mine ? mineStatus : feed.status}
+          onStatus={(next) => (mine ? setMineStatus(next) : feed.setStatus(next))}
+          statusCounts={mine ? mineCounts : stats.status_by_origin?.[external ? "external" : "school"] ?? { open: 0, upcoming: 0 }}
+          sort={mine ? mineSort : feed.sort}
+          onSort={(next) => (mine ? setMineSort(next) : feed.setSort(next as NoticeQuery["sort"]))}
         />
 
         {feed.view === "mine" ? (
@@ -140,9 +172,11 @@ export function Dashboard() {
             </div>
           ) : matched.length === 0 ? (
             <div className="empty"><p>지금은 나에게 해당되는 공지가 없어요. 새 공지가 오면 알려 드릴게요.</p></div>
+          ) : mineList.length === 0 ? (
+            <div className="empty"><p>조건에 맞는 공지가 없어요.</p></div>
           ) : (
             <ul className="rows">
-              {matched.map((item) => (
+              {mineList.map((item) => (
                 <NoticeRow
                   key={item.notice.id}
                   notice={item.notice}

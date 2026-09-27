@@ -92,3 +92,13 @@ def test_apply_start_with_exam_dates_after() -> None:
 
     text = "필기 원서접수: 2026-09-30 ~ 2026-10-01\n필기 시험일: 2026-10-06 ~ 2026-10-08\n접수는 2026-10-01까지입니다."
     assert extract_apply_start(text, date(2026, 9, 20), "2026-10-01") == "2026-09-30"
+
+
+def test_calendar_period_event() -> None:
+    """입력: 신청기간 10.12~10.16 공지, 출력: 캘린더에 접수 시작·마감과 '접수중' 기간(date~end)이 함께 나온다."""
+    from app.services.calendar import notice_dates
+
+    notice = Notice(id=1, title="SQLD 원서접수", source="데이터자격", category="자격증",
+                    structured_json={"deadline": "2026-10-16", "open_at": "2026-10-12"})
+    kinds = [(day.isoformat(), kind) for day, kind, _ in notice_dates(notice)]
+    assert ("2026-10-12", "open") in kinds and ("2026-10-16", "deadline") in kinds

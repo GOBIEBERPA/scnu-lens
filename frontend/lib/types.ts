@@ -57,8 +57,9 @@ export type UpcomingAlarm = {
 
 export type CalendarEvent = {
   date: string;
-  // open: 접수 시작, deadline: 마감, exam: 시험일, result: 성적·합격 발표
-  kind: "open" | "deadline" | "exam" | "result";
+  // open: 접수 시작, deadline: 마감, exam: 시험일, result: 성적·합격 발표, period: 신청기간(date~end, 점 없이 "접수중" 목록용)
+  kind: "open" | "deadline" | "exam" | "result" | "period";
+  end?: string;
   label: string;
   notice_id: number;
   title: string;

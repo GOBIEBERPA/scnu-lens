@@ -735,3 +735,12 @@ button.setup-card { width: 100%; border: 0; font: inherit; text-align: left; cur
 .brand-logo { width: 24px; height: 24px; flex: none; }
 .brief-row dd a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
 .detail-deadline.closed { color: #8b806f; }
+.ongoing-head { display: flex; align-items: center; gap: 6px; margin: 18px 0 10px; font-size: 15px; color: #0f766e; }
+.ongoing-head em { font-style: normal; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+/* 접수 상태 칩과 정렬 선택 */
+.chips .status-open.active { background: #177a53; border-color: #177a53; color: #fff; }
+.chips .status-upcoming.active { background: #6b6358; border-color: #6b6358; color: #fff; }
+.chips .sort select { appearance: none; border: 0; background: transparent; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 6px 4px; cursor: pointer; }
+.chips .sort { display: inline-flex; align-items: center; }
+.chips .sort::after { content: "▾"; font-size: 11px; color: var(--muted); margin-left: -2px; }

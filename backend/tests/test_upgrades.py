@@ -240,3 +240,25 @@ def test_origin_tabs_and_hide_closed(client) -> None:
     assert titles(origin="school", hide_closed="true") == ["학사 안내"]
     stats = api.get("/api/notices/stats").json()
     assert stats["categories_by_origin"] == {"school": {"학사": 2}, "external": {"자격증": 1}}
+
+
+def test_apply_status_filter_and_sorts(client) -> None:
+    """입력: 접수중·접수 예정·마감 지난 공지, 출력: status 필터·접수 시작순·마감 여유순·칩 숫자가 맞다."""
+    from datetime import date, timedelta
+
+    api, factory = client
+    day = lambda n: (date.today() + timedelta(days=n)).isoformat()  # noqa: E731
+    with factory() as db:
+        db.add(_notice("지금 접수중", category="학사", deadline_date=day(3), open_date=day(-2)))
+        db.add(_notice("시작일 모름", category="학사", deadline_date=day(9)))
+        db.add(_notice("다음 주 시작", category="학사", deadline_date=day(12), open_date=day(7)))
+        db.add(_notice("모레 시작", category="학사", deadline_date=day(6), open_date=day(2)))
+        db.add(_notice("이미 마감", category="학사", deadline_date=day(-1), open_date=day(-9)))
+        db.commit()
+    titles = lambda **p: [n["title"] for n in api.get("/api/notices", params=p).json()["items"]]  # noqa: E731
+    assert sorted(titles(status="open")) == ["시작일 모름", "지금 접수중"]
+    assert sorted(titles(status="upcoming")) == ["다음 주 시작", "모레 시작"]
+    assert titles(sort="opening") == ["모레 시작", "다음 주 시작"]
+    assert titles(sort="roomy") == ["다음 주 시작", "시작일 모름", "모레 시작", "지금 접수중"]
+    stats = api.get("/api/notices/stats").json()["status_by_origin"]["school"]
+    assert stats == {"open": 2, "upcoming": 2}

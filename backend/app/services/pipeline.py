@@ -33,6 +33,7 @@ def apply_structured(notice: Notice, structured: NoticeStructured) -> None:
     # 시각까지 알 때만 채운다. 날짜만 있으면 시각 알림 대상이 아니다.
     notice.open_at = structured.open_at if structured.open_at and "T" in structured.open_at else None
     notice.close_at = structured.close_at if structured.close_at and "T" in structured.close_at else None
+    notice.open_date = structured.open_at[:10] if structured.open_at else None
 
 
 def backfill_deadline_dates(db: Session) -> int:
@@ -50,6 +51,10 @@ def backfill_deadline_dates(db: Session) -> int:
             if getattr(notice, column) is None and isinstance(value, str) and (column == "deadline_date" or "T" in value):
                 setattr(notice, column, value)
                 changed = True
+        opens = data.get("open_at")
+        if notice.open_date is None and isinstance(opens, str):
+            notice.open_date = opens[:10]
+            changed = True
         filled += changed
     db.commit()
     return filled

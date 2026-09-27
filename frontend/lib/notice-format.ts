@@ -121,3 +121,13 @@ export function applyPeriod(structured?: { deadline?: string | null; open_at?: s
   const deadline = structured?.deadline;
   return opens && deadline && opens.slice(0, 10) < deadline ? `${shortDay(opens)} ~ ${shortDay(deadline)}` : null;
 }
+
+// 입력: 구조화 결과, 출력: 접수 상태(upcoming 접수 예정·open 접수중·closed 마감·null 모름). "나에게" 탭 필터에 쓴다.
+export function applyState(structured?: { deadline?: string | null; open_at?: string | null } | null): "upcoming" | "open" | "closed" | null {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const opens = structured?.open_at?.slice(0, 10);
+  if (opens && opens > today) return "upcoming";
+  if (structured?.deadline) return structured.deadline >= today ? "open" : "closed";
+  return null;
+}
