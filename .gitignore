@@ -12,3 +12,4 @@ coverage/
 .DS_Store
 .sites-runtime/
 logs/
+docs/.deck-tmp/

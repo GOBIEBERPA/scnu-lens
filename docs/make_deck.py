@@ -1,27 +1,36 @@
-"""해커톤 발표 자료(SCNU-Lens-발표.pptx)를 만든다. 구글 드라이브에 올리면 구글 슬라이드로 열린다."""
+"""해커톤 발표 자료(SCNU-Lens-발표.pptx, 7장)를 만든다. 구글 드라이브에 올리면 구글 슬라이드로 열린다."""
 from pathlib import Path
 
+from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
-from pptx.util import Emu, Inches, Pt
+from pptx.util import Inches, Pt
 
 ROOT = Path(__file__).resolve().parent
 SHOT = ROOT / "screenshots"
 PUB = ROOT.parent / "frontend" / "public"
 OUT = ROOT / "SCNU-Lens-발표.pptx"
+TMP = ROOT / ".deck-tmp"
+TMP.mkdir(exist_ok=True)
+SITE = "https://scnuaram.vercel.app"
 
 BLUE = RGBColor(0x00, 0x58, 0xB2)
 NAVY = RGBColor(0x0B, 0x25, 0x45)
-SKY = RGBColor(0xCF, 0xE4, 0xFB)
+SKY = RGBColor(0xA9, 0xCB, 0xF2)
 SOFT = RGBColor(0xEE, 0xF4, 0xFB)
-INK = RGBColor(0x1F, 0x1D, 0x1A)
-MUTED = RGBColor(0x6B, 0x68, 0x62)
+PAGE = RGBColor(0xF6, 0xF8, 0xFB)
+INK = RGBColor(0x1F, 0x23, 0x2B)
+MUTED = RGBColor(0x66, 0x6E, 0x7A)
+LINE = RGBColor(0xDD, 0xE3, 0xEA)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-ORANGE = RGBColor(0xC8, 0x4B, 0x31)
-FRAME = RGBColor(0x26, 0x2A, 0x33)
+RED = RGBColor(0xD1, 0x43, 0x3A)
+REDSOFT = RGBColor(0xFD, 0xEC, 0xEA)
+GREEN = RGBColor(0x1E, 0x9E, 0x6A)
+GREENSOFT = RGBColor(0xE6, 0xF6, 0xEE)
+GRAY = RGBColor(0xB8, 0xC1, 0xCC)
 FONT = "Malgun Gothic"
 
 prs = Presentation()
@@ -85,7 +94,7 @@ def rect(slide, x, y, w, h, color, radius=None, line=None, shadow=False):
     return shape
 
 
-def circle(slide, x, y, d, color, label, size=18, fg=WHITE):
+def circle(slide, x, y, d, color, label, size=16, fg=WHITE):
     c = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x), Inches(y), Inches(d), Inches(d))
     c.fill.solid()
     c.fill.fore_color.rgb = color
@@ -94,11 +103,29 @@ def circle(slide, x, y, d, color, label, size=18, fg=WHITE):
     text(slide, x, y, d, d, label, size=size, color=fg, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 
 
+def arrow(slide, x, y, w=0.36, h=0.4, color=GRAY):
+    a = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x), Inches(y), Inches(w), Inches(h))
+    a.fill.solid()
+    a.fill.fore_color.rgb = color
+    a.line.fill.background()
+    a.shadow.inherit = False
+
+
+def phone(slide, image, x, y, h):
+    """휴대폰 모양: 검은 테두리 안에 캡처(1170x2532)."""
+    w = h * 1170 / 2532
+    pad = 0.08
+    rect(slide, x - pad, y - pad, w + pad * 2, h + pad * 2, RGBColor(0x11, 0x11, 0x14), radius=0.08, shadow=True)
+    slide.shapes.add_picture(str(image), Inches(x), Inches(y), Inches(w), Inches(h))
+    return w
+
+
 def browser(slide, image, x, y, w):
-    """노트북 화면처럼: 위쪽 주소창 + 화면 캡처(16:10)."""
+    """노트북 화면처럼: 위쪽 주소창 + 화면 캡처."""
     bar = 0.3
-    h = w * 1350 / 2160
-    rect(slide, x - 0.06, y - 0.06, w + 0.12, h + bar + 0.12, FRAME, radius=0.03, shadow=True)
+    im = Image.open(image)
+    h = w * im.height / im.width
+    rect(slide, x - 0.06, y - 0.06, w + 0.12, h + bar + 0.12, RGBColor(0x26, 0x2A, 0x33), radius=0.03, shadow=True)
     for i, c in enumerate((RGBColor(0xFF, 0x5F, 0x57), RGBColor(0xFE, 0xBC, 0x2E), RGBColor(0x28, 0xC8, 0x40))):
         dot = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x + 0.12 + i * 0.18), Inches(y + 0.09), Inches(0.11), Inches(0.11))
         dot.fill.solid(); dot.fill.fore_color.rgb = c; dot.line.fill.background(); dot.shadow.inherit = False
@@ -108,178 +135,198 @@ def browser(slide, image, x, y, w):
     return h + bar
 
 
-def phone(slide, image, x, y, h):
-    """휴대폰 모양: 검은 테두리 안에 캡처(1170x2532)."""
-    w = h * 1170 / 2532
-    pad = 0.09
-    rect(slide, x - pad, y - pad, w + pad * 2, h + pad * 2, RGBColor(0x11, 0x11, 0x14), radius=0.09, shadow=True)
-    slide.shapes.add_picture(str(image), Inches(x), Inches(y), Inches(w), Inches(h))
-    return w
+def crop(src, box, name):
+    path = TMP / name
+    Image.open(src).crop(box).save(path)
+    return path
 
 
-def title(slide, head, sub=None, dark=False):
-    text(slide, 0.6, 0.45, 12.1, 0.7, head, size=32, bold=True, color=WHITE if dark else INK)
-    if sub:
-        text(slide, 0.6, 1.12, 12.1, 0.45, sub, size=16, color=SKY if dark else MUTED)
+def title(slide, head):
+    text(slide, 0.65, 0.5, 12.0, 0.8, head, size=30, bold=True)
 
 
-def callouts(slide, x, y, w, items):
-    """번호 원 + 굵은 한 줄 + 설명."""
-    for i, (head, body) in enumerate(items):
-        top = y + i * 1.55
-        circle(slide, x, top, 0.42, BLUE, str(i + 1), size=15)
-        text(slide, x + 0.55, top - 0.02, w - 0.55, 0.45, head, size=15, bold=True)
-        text(slide, x + 0.55, top + 0.42, w - 0.55, 1.0, body, size=12, color=MUTED)
+def page_no(slide, n):
+    text(slide, 12.3, 7.0, 0.5, 0.3, str(n), size=10, color=MUTED, align=PP_ALIGN.RIGHT)
+
+
+def notes(slide, body):
+    slide.notes_slide.notes_text_frame.text = body
 
 
 # ---------------------------------------------------------------- 1. 표지
 s = prs.slides.add_slide(BLANK)
 bg(s, NAVY)
-s.shapes.add_picture(str(PUB / "icon-512.png"), Inches(0.75), Inches(1.35), Inches(1.15), Inches(1.15))
-text(s, 0.75, 2.75, 7.2, 1.0, "SCNU Lens", size=60, bold=True, color=WHITE)
-text(s, 0.78, 3.8, 7.2, 0.6, "순천대 AI 통합 알리미", size=26, bold=True, color=SKY)
-text(s, 0.78, 4.6, 7.0, 1.1, ["흩어진 학교 공지 100여 곳과 공모전·자격증 일정을 모아", "나에게 해당되는 것만, 마감 전에 알려드려요"], size=17, color=WHITE, spacing=4)
-text(s, 0.78, 6.35, 7.0, 0.4, [[("scnuaram.vercel.app", {"bold": True, "color": WHITE}), ("   ·   2026 SCNU OSS·AI 해커톤 · 기초 트랙 · 이휴단", {"color": SKY})]], size=13)
-phone(s, SHOT / "2-for-me.png", 9.35, 0.7, 6.1)
-s.notes_slide.notes_text_frame.text = (
-    "안녕하세요, 순천대 AI 통합 알리미 SCNU Lens를 만든 이휴단입니다. "
-    "학교 공지를 하나로 모아서, 나에게 해당되는 것만 마감 전에 알려주는 모바일 웹앱입니다.")
+text(s, 0.8, 1.55, 7.5, 0.4, "2026 SCNU OSS·AI 해커톤 · 기초 트랙", size=14, bold=True, color=SKY)
+s.shapes.add_picture(str(PUB / "icon-512.png"), Inches(0.8), Inches(2.2), Inches(0.95), Inches(0.95))
+text(s, 1.95, 2.18, 6.5, 1.0, "SCNU Lens", size=54, bold=True, color=WHITE, anchor=MSO_ANCHOR.MIDDLE)
+text(s, 0.82, 3.55, 7.3, 1.3, ["흩어진 학교 공지를 한곳에 모아", "나에게 맞는 것만, 마감 전에 알려 주는 앱"],
+     size=22, color=WHITE, spacing=6)
+text(s, 0.82, 6.2, 7.3, 0.4, "이휴단  ·  scnuaram.vercel.app", size=13, color=SKY)
+w = phone(s, SHOT / "2-for-me.png", 9.4, 0.75, 6.0)
+notes(s, "안녕하세요, SCNU Lens를 만든 이휴단입니다. "
+         "학교 곳곳에 흩어진 공지를 한곳에 모아서, 나에게 맞는 것만 마감 전에 알려 주는 앱입니다.")
 
 # ---------------------------------------------------------------- 2. 문제
 s = prs.slides.add_slide(BLANK)
-bg(s, WHITE)
-title(s, "공지는 많은데, 내 것은 안 보입니다", "순천대 학생이 공지를 확인하는 지금의 방법")
-cards = [
-    ("100+", "게시판이 흩어져 있다", "학사·장학 본부 게시판, 학과·부속기관 게시판 100곳 넘게, 공모전·자격증은 또 다른 사이트"),
-    ("중복·첨부", "정보가 묻혀 있다", "같은 공지가 여러 게시판에 중복. 마감일·신청 방법은 본문과 HWP·PDF 첨부 속에"),
-    ("마감", "그래서 놓친다", "\"이게 나에게 해당되나?\" \"언제까지지?\"를 바로 알 수 없어 장학·취업·공모전 기회를 지나친다"),
+bg(s, PAGE)
+title(s, "학교 공지는 한곳에 모여 있지 않습니다")
+# 왼쪽: 흩어진 게시판들
+rect(s, 0.65, 1.6, 5.6, 4.6, WHITE, radius=0.05, line=LINE)
+chips = [("학사공지", 0.95, 1.95), ("장학공지", 3.05, 2.05), ("취업지원센터", 4.1, 2.75),
+         ("컴퓨터공학과", 1.1, 2.8), ("간호학과", 2.85, 3.5), ("식품공학과", 0.9, 3.75),
+         ("큐넷 시험 일정", 3.55, 4.25), ("창업 지원 사업", 1.05, 4.7), ("국제교류", 3.2, 5.05),
+         ("데이터자격검정", 0.95, 5.55), ("학생생활관", 3.9, 5.55)]
+for label, x, y in chips:
+    cw = 0.32 + len(label) * 0.19
+    rect(s, x, y, cw, 0.42, SOFT, radius=0.5)
+    text(s, x, y, cw, 0.42, label, size=12, color=BLUE, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+text(s, 0.65, 6.35, 5.6, 0.4, [[("109곳", {"bold": True, "color": BLUE}), " 학교 게시판  +  공모전·자격증 사이트"]],
+     size=15, align=PP_ALIGN.CENTER)
+# 오른쪽: 그래서 생기는 일
+pains = [
+    ("어디서 봐야 할지 모름", "본부·학과·기관 게시판을\n하나씩 들어가 봐야 함", WHITE, BLUE),
+    ("나에게 해당되는지 모름", "대상·마감일은 긴 본문과\nHWP·PDF 첨부 속에", WHITE, BLUE),
+    ("마감이 지나서야 앎", "장학금·공모전·채용\n기회를 놓침", REDSOFT, RED),
 ]
-for i, (big, head, body) in enumerate(cards):
-    x = 0.6 + i * 4.1
-    rect(s, x, 2.0, 3.8, 3.9, SOFT, radius=0.06)
-    text(s, x + 0.35, 2.35, 3.2, 1.0, big, size=44 if i < 2 else 48, bold=True, color=ORANGE if i == 2 else BLUE)
-    text(s, x + 0.35, 3.55, 3.2, 0.5, head, size=20, bold=True)
-    text(s, x + 0.35, 4.2, 3.15, 2.2, body, size=14, color=MUTED)
-s.notes_slide.notes_text_frame.text = (
-    "순천대 공지는 학사, 장학, 그리고 학과 게시판까지 100곳 넘게 흩어져 있습니다. "
-    "같은 공지가 여러 번 올라오고, 정작 마감일과 신청 방법은 첨부파일 속에 있죠. "
-    "그래서 나에게 해당되는지, 언제까지인지 모르고 기회를 놓칩니다.")
+for i, (head, body, fill, accent) in enumerate(pains):
+    y = 1.6 + i * 1.6
+    rect(s, 6.75, y, 5.95, 1.35, fill, radius=0.08, line=None if fill == REDSOFT else LINE)
+    circle(s, 7.05, y + 0.4, 0.55, accent, str(i + 1), size=15)
+    text(s, 7.85, y + 0.25, 4.7, 0.45, head, size=19, bold=True)
+    text(s, 7.85, y + 0.72, 4.7, 0.6, body.replace("\n", " "), size=13, color=MUTED)
+page_no(s, 2)
+notes(s, "순천대 공지는 학사, 장학, 학과, 기관 게시판까지 109곳에 흩어져 있고, 공모전과 자격증 일정은 또 다른 사이트에 있습니다. "
+         "게다가 나에게 해당되는지, 언제까지인지는 긴 본문과 첨부파일 속에 있어서, 결국 마감이 지나서야 알게 됩니다.")
 
-# ---------------------------------------------------------------- 3. 해결 흐름
+# ---------------------------------------------------------------- 3. 해결 (앱 흐름)
 s = prs.slides.add_slide(BLANK)
-bg(s, WHITE)
-title(s, "모으고, 정리하고, 골라서, 알려줍니다", "사람이 할 일은 처음 30초 설정뿐")
+bg(s, PAGE)
+title(s, "그래서, 나에게 맞는 공지만 골라 주는 앱을 만들었습니다")
 steps = [
-    ("수집", "매시간 자동", "학교 게시판 109곳\n+ 큐넷·데이터자격검정·K-Startup API"),
-    ("AI 정리", "서버 안 AI 모델", "분야 분류, 대상·기간·신청방법·문의를\n정리 카드로, 중복 공지는 하나로"),
-    ("나에게", "추천 + 이유", "학과·관심사로 점수를 매기고\n\"왜 나에게 해당되는지\" 문장으로"),
-    ("알림", "마감 전", "마감 7·3·1일 전, 접수 시각에\n웹 푸시와 알림함으로"),
+    ("1-onboarding.png", "30초 설정", "학과는 '컴공'처럼 줄여 써도 OK"),
+    ("2-for-me.png", "나에게 맞는 공지", "왜 추천했는지 이유까지"),
+    ("3-detail.png", "한 장으로 정리", "대상·기간·신청방법·문의"),
+    ("4-calendar.png", "마감 전에 알림", "7·3·1일 전 휴대폰으로"),
 ]
-for i, (head, tag, body) in enumerate(steps):
-    x = 0.6 + i * 3.15
-    rect(s, x, 2.1, 2.8, 4.3, SOFT, radius=0.06)
-    circle(s, x + 0.3, 2.45, 0.7, BLUE, str(i + 1), size=22)
-    text(s, x + 0.3, 3.4, 2.3, 0.5, head, size=22, bold=True)
-    text(s, x + 0.3, 3.95, 2.3, 0.4, tag, size=13, bold=True, color=BLUE)
-    text(s, x + 0.3, 4.5, 2.35, 1.8, body, size=13, color=MUTED)
+ph = 4.15
+pw = ph * 1170 / 2532
+for i, (img, head, sub) in enumerate(steps):
+    x = 0.95 + i * 3.1
+    phone(s, SHOT / img, x + 0.3, 1.75, ph)
+    circle(s, x - 0.05, 1.5, 0.5, BLUE, str(i + 1), size=15)
+    text(s, x - 0.3, 6.1, pw + 1.2, 0.45, head, size=18, bold=True, align=PP_ALIGN.CENTER)
+    text(s, x - 0.3, 6.55, pw + 1.2, 0.4, sub, size=12, color=MUTED, align=PP_ALIGN.CENTER)
     if i < 3:
-        arrow = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + 2.83), Inches(4.05), Inches(0.28), Inches(0.35))
-        arrow.fill.solid(); arrow.fill.fore_color.rgb = SKY; arrow.line.fill.background(); arrow.shadow.inherit = False
-s.notes_slide.notes_text_frame.text = (
-    "SCNU Lens는 네 단계로 동작합니다. 학교 게시판 109곳과 공공데이터 API를 매시간 모으고, "
-    "서버 안의 AI 모델로 분류하고 정리 카드를 만듭니다. 그리고 학과와 관심사로 골라 이유와 함께 보여주고, 마감 전에 알려줍니다.")
+        arrow(s, x + pw + 0.62, 3.65)
+page_no(s, 3)
+notes(s, "처음 들어오면 학과와 관심사를 30초 만에 고릅니다. 학과는 '컴공'처럼 줄여 써도 찾아 줍니다. "
+         "그러면 나에게 맞는 공지를 이유와 함께 보여 주고, 누르면 대상·기간·신청방법이 한 장으로 정리돼 있습니다. "
+         "마감 7일, 3일, 1일 전에는 휴대폰으로 알려 줍니다.")
 
-
-# ---------------------------------------------------------------- 4~6. 시연 (웹 + 휴대폰)
-def demo(head, sub, web_img, phone_img, items, notes):
-    s = prs.slides.add_slide(BLANK)
-    bg(s, WHITE)
-    title(s, head, sub)
-    browser(s, web_img, 0.65, 1.95, 6.6)
-    phone(s, phone_img, 7.75, 1.85, 5.2)
-    callouts(s, 10.45, 2.05, 2.5, items)
-    s.notes_slide.notes_text_frame.text = notes
-
-
-demo("① 30초 설정 — 학과는 고르기만", "웹과 휴대폰에서 똑같이 동작합니다",
-     SHOT / "desktop" / "1-onboarding.png", SHOT / "1-onboarding.png",
-     [("줄임말·초성 검색", "'컴공' → 컴퓨터공학전공\n'ㄱㅎ' → 간호학과"),
-      ("목록에서만 선택", "오타로 학과 매칭이\n깨지지 않게"),
-      ("알림도 한 번에", "휴대폰 알림을 켜면\n마감 전에 알려줌")],
-     "처음 접속하면 30초 설정이 뜹니다. 학과는 70개 목록에서만 고르게 해서 오타로 매칭이 깨지지 않게 했고, "
-     "학생들이 쓰는 '컴공' 같은 줄임말이나 초성으로도 찾을 수 있습니다.")
-demo("② 나에게 — 왜 추천했는지 알려줍니다", "식품공학전공 · 관심사 '장학금, 취업'으로 설정한 화면",
-     SHOT / "desktop" / "2-for-me.png", SHOT / "2-for-me.png",
-     [("추천 이유 표시","\"관심 키워드 '장학금, 취업'과\n관련된 공지예요\""),
-      ("내 학과 게시판 우선", "109곳 중 내 과 소식을\n가장 먼저"),
-      ("헛추천은 거른다", "결과·수상자 발표, 본문에\n한 번 스친 단어는 제외")],
-     "나에게 탭입니다. 공지마다 왜 추천했는지 파란 문장으로 보여줍니다. 내 학과 게시판 공지가 가장 먼저 오고, "
-     "이미 끝난 결과 발표나 본문에 한 번 스친 단어로는 추천하지 않도록 다듬었습니다.")
-demo("③ 정리 카드와 캘린더", "본문·첨부파일에서 필요한 칸만 뽑아 보여줍니다",
-     SHOT / "desktop" / "4-calendar.png", SHOT / "3-detail.png",
-     [("정리 카드", "대상·기간·신청방법·문의를\n표로, 링크는 바로 누르기"),
-      ("마감 알림 예정", "7·3·1일 전 알림 시각을\n미리 보여줌"),
-      ("캘린더", "마감일·시험일·발표일\nD-3 마감 / 오늘 마감")],
-     "공지를 누르면 대상, 기간, 신청방법, 문의가 정리된 카드가 열리고, 언제 알림이 갈지도 미리 보여줍니다. "
-     "캘린더에서는 이번 달 마감일과 시험일을 한눈에 볼 수 있습니다.")
-
-# ---------------------------------------------------------------- 7. 차별점
+# ---------------------------------------------------------------- 4. AI 정리
 s = prs.slides.add_slide(BLANK)
-bg(s, WHITE)
-title(s, "다른 알리미와 다른 점")
-points = [
-    ("학과 게시판 109곳 자동 탐색", "학교 사이트가 같은 게시판 엔진을 쓴다는 점을 이용해 게시판 주소를 스스로 찾아 한 번에 수집"),
-    ("AI 비용 0원, 외부 전송 없음", "유료 AI API 없이 오픈소스 경량 모델(MiniLM)을 서버에서 직접 실행. 공지 원문이 밖으로 나가지 않음"),
-    ("\"왜 나에게?\"를 설명", "블랙박스 추천이 아니라 근거(내 학과 게시판, 관심 키워드)를 문장으로 제시"),
-    ("실제로 써 보며 다듬은 규칙", "신청기간과 운영기간 구분, '신청 시작'은 마감 아님, 다른 지역 한정 공고 제외"),
-]
-for i, (head, body) in enumerate(points):
-    x = 0.6 + (i % 2) * 6.15
-    y = 1.7 + (i // 2) * 2.7
-    rect(s, x, y, 5.85, 2.4, SOFT, radius=0.06)
-    circle(s, x + 0.35, y + 0.4, 0.6, BLUE, str(i + 1), size=20)
-    text(s, x + 1.2, y + 0.42, 4.4, 0.6, head, size=19, bold=True)
-    text(s, x + 1.2, y + 1.1, 4.35, 1.2, body, size=14, color=MUTED)
-s.notes_slide.notes_text_frame.text = (
-    "차별점은 네 가지입니다. 학과 게시판 109곳을 자동으로 찾아 모으고, 유료 AI 없이 서버에서 직접 모델을 돌려 비용이 0원입니다. "
-    "추천 이유를 설명하고, 실제로 써 보면서 신청기간과 운영기간을 구분하는 등 규칙을 다듬었습니다.")
+bg(s, PAGE)
+title(s, "AI는 이렇게 긴 공지를 정리합니다")
+# 1) 원문
+circle(s, 0.65, 1.55, 0.45, BLUE, "1", size=14)
+text(s, 1.2, 1.58, 3.2, 0.4, "학교 공지 원문", size=16, bold=True)
+rect(s, 0.65, 2.2, 3.55, 3.3, WHITE, radius=0.05, line=LINE)
+for k, lw in enumerate((3.0, 2.7, 3.1, 2.2, 2.9, 3.0, 1.9, 2.8, 2.5)):
+    rect(s, 0.9, 2.45 + k * 0.25, lw, 0.1, LINE, radius=0.5)
+for k, ext in enumerate(("첨부.hwp", "안내.pdf")):
+    rect(s, 0.9 + k * 1.45, 4.85, 1.3, 0.4, SOFT, radius=0.5)
+    text(s, 0.9 + k * 1.45, 4.85, 1.3, 0.4, ext, size=11, bold=True, color=BLUE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+arrow(s, 4.35, 3.6)
+# 2) AI 판단
+circle(s, 4.9, 1.55, 0.45, BLUE, "2", size=14)
+text(s, 5.45, 1.58, 3.0, 0.4, "AI가 읽고 판단", size=16, bold=True)
+tags = [("분야", "장학 · 취업 · 공모전 · 자격증 …"), ("대상", "대학원생, 재학생, 신입생"),
+        ("마감", "10. 23.(금)  →  D-26"), ("중복", "같은 공지는 하나로")]
+for k, (tag, body) in enumerate(tags):
+    y = 2.2 + k * 0.84
+    rect(s, 4.9, y, 3.35, 0.68, WHITE, radius=0.12, line=LINE)
+    text(s, 5.1, y, 0.7, 0.68, tag, size=12, bold=True, color=BLUE, anchor=MSO_ANCHOR.MIDDLE)
+    text(s, 5.8, y, 2.4, 0.68, body, size=12, anchor=MSO_ANCHOR.MIDDLE)
+arrow(s, 8.4, 3.6)
+# 3) 정리 카드
+circle(s, 8.95, 1.55, 0.45, BLUE, "3", size=14)
+text(s, 9.5, 1.58, 3.2, 0.4, "한 장으로 정리", size=16, bold=True)
+card = crop(SHOT / "3-detail.png", (40, 380, 1130, 1760), "detail-card.png")
+cw = 3.75
+chh = cw * 1380 / 1090
+rect(s, 8.95 - 0.05, 2.2 - 0.05, cw + 0.1, chh + 0.1, LINE, radius=0.03)
+s.shapes.add_picture(str(card), Inches(8.95), Inches(2.2), Inches(cw), Inches(chh))
+# 아래 강조
+rect(s, 0.65, 5.85, 7.6, 1.0, WHITE, radius=0.12, line=LINE)
+text(s, 0.95, 5.85, 1.5, 1.0, "0원", size=36, bold=True, color=BLUE, anchor=MSO_ANCHOR.MIDDLE)
+text(s, 2.5, 5.95, 5.6, 0.8, [[("유료 AI 서비스 없이", {"bold": True})], "공개 AI 모델을 우리 서버 안에서 돌려요"],
+     size=13, anchor=MSO_ANCHOR.MIDDLE, spacing=2)
+page_no(s, 4)
+notes(s, "AI가 공지 본문과 첨부파일을 읽고, 어떤 분야인지, 누가 대상인지, 언제 마감인지를 뽑아서 한 장의 카드로 정리합니다. "
+         "여러 게시판에 같은 공지가 올라오면 하나로 합칩니다. 유료 AI 서비스 없이 공개된 AI 모델을 서버 안에서 돌리기 때문에 비용은 0원입니다.")
 
-# ---------------------------------------------------------------- 8. 기술·숫자
+# ---------------------------------------------------------------- 5. 실제 운영
 s = prs.slides.add_slide(BLANK)
-bg(s, WHITE)
-title(s, "어떻게 만들었나", "모두 오픈소스, 24시간 운영 중")
-stack = [
-    [("AI  ", {"bold": True, "color": BLUE}), "MiniLM 다국어 임베딩(fastembed·ONNX) + 규칙 추출"],
-    [("백엔드  ", {"bold": True, "color": BLUE}), "Python · FastAPI · SQLite · APScheduler · BeautifulSoup"],
-    [("화면  ", {"bold": True, "color": BLUE}), "Next.js · React · TypeScript · PWA(웹 푸시)"],
-    [("데이터  ", {"bold": True, "color": BLUE}), "순천대 게시판 + 공공데이터포털 API 3종"],
-    [("배포  ", {"bold": True, "color": BLUE}), "화면 Vercel, 수집·알림 Oracle Cloud + Caddy(https)"],
-]
-text(s, 0.6, 2.0, 6.4, 4.5, stack, size=16, spacing=16)
-stats = [("109", "학교 게시판"), ("70", "학과 선택 목록"), ("126", "자동 테스트 통과"), ("0원", "AI 운영 비용")]
+bg(s, PAGE)
+title(s, "지금 실제로 매시간 돌아가고 있습니다")
+browser(s, crop(SHOT / "desktop" / "2-for-me.png", (480, 0, 1680, 800), "desktop-for-me.png"), 0.8, 1.65, 6.5)
+stats = [("109곳", "학교 게시판을\n매시간 확인"), ("3종", "큐넷·데이터자격·\nK-Startup 공공 API"),
+         ("70개", "학과 목록에서\n골라서 추천"), ("0원", "서버·AI\n운영 비용")]
 for i, (big, label) in enumerate(stats):
-    x = 7.4 + (i % 2) * 2.85
-    y = 1.9 + (i // 2) * 2.35
-    rect(s, x, y, 2.6, 2.05, SOFT, radius=0.08)
-    text(s, x, y + 0.3, 2.6, 0.9, big, size=44, bold=True, color=BLUE, align=PP_ALIGN.CENTER)
-    text(s, x, y + 1.3, 2.6, 0.5, label, size=14, color=MUTED, align=PP_ALIGN.CENTER)
-s.notes_slide.notes_text_frame.text = (
-    "기술적으로는 오픈소스 MiniLM 모델과 FastAPI, Next.js로 만들었고, 화면은 Vercel, 수집과 알림은 Oracle Cloud에서 24시간 돌아가고 있습니다. "
-    "자동 테스트 126개가 통과한 상태입니다.")
+    x = 8.2 + (i % 2) * 2.3
+    y = 1.65 + (i // 2) * 2.35
+    rect(s, x, y, 2.1, 2.1, WHITE, radius=0.08, line=LINE)
+    text(s, x, y + 0.3, 2.1, 0.8, big, size=32, bold=True, color=BLUE, align=PP_ALIGN.CENTER)
+    text(s, x + 0.1, y + 1.15, 1.9, 0.8, label, size=12, color=MUTED, align=PP_ALIGN.CENTER)
+text(s, 0.7, 6.6, 12.0, 0.4, "휴대폰에서도, 컴퓨터에서도 같은 주소로 열립니다. 설치 없이 '홈 화면에 추가'하면 앱처럼 씁니다.",
+     size=14, bold=True, align=PP_ALIGN.CENTER)
+page_no(s, 5)
+notes(s, "지금 이 순간에도 학교 게시판 109곳과 공공 API 3종을 매시간 확인하고 있습니다. "
+         "컴퓨터에서도 휴대폰에서도 같은 주소로 열리고, 설치 없이 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.")
 
-# ---------------------------------------------------------------- 9. 마무리
+# ---------------------------------------------------------------- 6. 앞으로
+s = prs.slides.add_slide(BLANK)
+bg(s, PAGE)
+title(s, "학생들이 쓸수록 더 정확해집니다")
+plans = [
+    ("지금", "누구나 쓸 수 있는 웹앱", "매시간 수집, 추천, 마감 알림까지\n실제 주소에서 운영 중입니다.", WHITE, INK, LINE),
+    ("다음", "학생 의견으로 다듬기", "지역 한정 공고 표시, 추천이 빗나간\n공지를 모아 규칙을 고칩니다.", SOFT, BLUE, None),
+    ("나중에", "다른 학과·다른 학교로", "같은 게시판 시스템을 쓰는 곳이면\n주소만 추가해 넓힐 수 있습니다.", GREENSOFT, GREEN, None),
+]
+for i, (when, head, body, fill, accent, line) in enumerate(plans):
+    x = 0.65 + i * 4.2
+    rect(s, x, 2.2, 3.8, 2.9, fill, radius=0.06, line=line)
+    text(s, x + 0.35, 2.5, 3.1, 0.4, when, size=14, bold=True, color=accent)
+    text(s, x + 0.35, 3.0, 3.2, 0.6, head, size=20, bold=True)
+    text(s, x + 0.35, 3.8, 3.2, 1.8, body, size=14, color=MUTED, spacing=2)
+    if i < 2:
+        arrow(s, x + 3.83, 3.45, w=0.32)
+text(s, 0.65, 5.75, 12.0, 0.5, "학교 사이트를 바꿀 필요 없이, 이미 있는 게시판을 그대로 읽습니다.",
+     size=18, bold=True, align=PP_ALIGN.CENTER)
+page_no(s, 6)
+notes(s, "지금은 누구나 쓸 수 있는 웹앱으로 운영 중입니다. 다음으로는 학생들의 의견을 받아, 예를 들어 지역 한정 공고를 표시하고 "
+         "추천이 빗나간 공지를 모아 규칙을 고치려고 합니다. 학교 사이트를 바꿀 필요 없이 이미 있는 게시판을 읽기 때문에, "
+         "같은 게시판 시스템을 쓰는 곳이라면 쉽게 넓힐 수 있습니다.")
+
+# ---------------------------------------------------------------- 7. 마무리 + 시연
 s = prs.slides.add_slide(BLANK)
 bg(s, NAVY)
-text(s, 0.75, 1.5, 8.0, 1.0, "지금 바로 써 보세요", size=44, bold=True, color=WHITE)
-text(s, 0.78, 2.7, 8.0, 0.6, "scnuaram.vercel.app", size=30, bold=True, color=SKY)
-text(s, 0.78, 3.6, 8.0, 1.6, ["휴대폰에서 열고 '홈 화면에 추가'하면 앱처럼 쓸 수 있어요",
-                               "GitHub  github.com/GOBIEBERPA/scnu-lens"], size=17, color=WHITE, spacing=10)
-text(s, 0.78, 6.3, 8.0, 0.4, "감사합니다 · SCNU Lens · 이휴단", size=14, color=SKY)
-rect(s, 9.35, 1.55, 3.3, 3.3, WHITE, radius=0.06)
-s.shapes.add_picture(str(ROOT / "qr-scnuaram.png"), Inches(9.55), Inches(1.75), Inches(2.9), Inches(2.9))
-text(s, 9.35, 5.05, 3.3, 0.4, "QR로 바로 접속", size=14, color=SKY, align=PP_ALIGN.CENTER)
-s.notes_slide.notes_text_frame.text = (
-    "화면의 QR 코드나 scnuaram.vercel.app 으로 지금 바로 써 보실 수 있습니다. 감사합니다.")
+text(s, 0.8, 0.9, 6.0, 0.4, "감사합니다", size=16, bold=True, color=SKY)
+text(s, 0.8, 1.6, 7.5, 1.9, ["휴대폰으로", "직접 써 보세요"], size=46, bold=True, color=WHITE)
+text(s, 0.82, 3.75, 7.5, 0.9, ["카메라로 오른쪽 QR을 찍으면 바로 열립니다.", "학과를 고르면 30초 안에 나에게 맞는 공지가 보여요."],
+     size=15, color=WHITE, spacing=4)
+btn = rect(s, 0.82, 4.95, 3.3, 0.7, GREEN, radius=0.5)
+btn.click_action.hyperlink.address = SITE
+text(s, 0.82, 4.95, 3.3, 0.7, "▶  지금 시연해 볼게요", size=17, bold=True, color=WHITE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+text(s, 0.82, 6.1, 1.2, 0.3, "바로 가기", size=12, bold=True, color=SKY)
+text(s, 2.0, 6.1, 5.5, 0.3, "scnuaram.vercel.app", size=12, color=WHITE)
+text(s, 0.82, 6.5, 1.2, 0.3, "소스 코드", size=12, bold=True, color=SKY)
+text(s, 2.0, 6.5, 5.5, 0.3, "github.com/GOBIEBERPA/scnu-lens", size=12, color=WHITE)
+rect(s, 8.9, 1.5, 3.6, 3.6, WHITE, radius=0.06)
+qr = s.shapes.add_picture(str(ROOT / "qr-scnuaram.png"), Inches(9.1), Inches(1.7), Inches(3.2), Inches(3.2))
+qr.click_action.hyperlink.address = SITE
+text(s, 8.9, 5.3, 3.6, 0.4, "scnuaram.vercel.app", size=13, color=SKY, align=PP_ALIGN.CENTER)
+notes(s, "화면의 QR을 찍으시면 바로 써 보실 수 있습니다. 지금 시연해 보겠습니다. (초록 버튼을 누르면 사이트가 열립니다) 감사합니다.")
 
 prs.save(OUT)
 print("saved", OUT)
