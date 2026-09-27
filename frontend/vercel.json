@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://scnu.64-110-105-215.sslip.io/api/:path*"
+    }
+  ]
+}

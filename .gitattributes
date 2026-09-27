@@ -1,0 +1,5 @@
+# 리눅스 서버에서 실행하는 스크립트는 윈도우에서 커밋해도 LF 줄바꿈을 유지한다.
+*.sh text eol=lf
+Caddyfile text eol=lf
+*.snippet text eol=lf
+*.service text eol=lf

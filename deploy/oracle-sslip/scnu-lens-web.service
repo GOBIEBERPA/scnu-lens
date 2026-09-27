@@ -1,0 +1,23 @@
+[Unit]
+Description=SCNU Lens 화면 (Next.js)
+After=network-online.target scnu-lens-api.service
+Wants=network-online.target
+
+[Service]
+User=scnulens
+Group=scnulens
+WorkingDirectory=/opt/scnu-lens/frontend
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/opt/node/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3100
+Restart=always
+RestartSec=5
+# 평소 약 80MB.
+MemoryMax=512M
+Nice=5
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

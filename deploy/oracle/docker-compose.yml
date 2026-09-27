@@ -1,0 +1,82 @@
+# Oracle Cloud Always Free (Ampere A1, ARM 2코어·12GB — 2026-06-15부터 줄어든 한도) 한 대에 전부 올리는 구성.
+# LLM 없이 약 1.3GB를 쓴다. 2코어에서는 LLM(Ollama)이 공지 1건에 수 분 걸려 권장하지 않는다.
+#   docker compose up -d --build                 # LLM 없이(규칙+임베딩)
+#   docker compose --profile llm up -d --build   # 로컬 LLM(Ollama)까지
+# 모든 이미지는 ARM(aarch64)용이 공식으로 있어 그대로 빌드된다.
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: scnu_lens
+      MARIADB_USER: scnu
+      MARIADB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD를 .env에 넣으세요}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD를 .env에 넣으세요}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ../../backend/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build: ../../backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: mysql+pymysql://scnu:${DB_PASSWORD}@db:3306/scnu_lens?charset=utf8mb4
+      FRONTEND_ORIGIN: https://${DOMAIN}
+      # 분류 모델(약 220MB)을 컨테이너를 새로 만들어도 다시 받지 않도록 볼륨에 둔다.
+      FASTEMBED_CACHE_PATH: /models
+    volumes:
+      - model_cache:/models
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../../frontend
+      args:
+        # 같은 도메인의 /api를 Caddy가 백엔드로 넘기므로 상대 경로면 된다.
+        NEXT_PUBLIC_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN을 .env에 넣으세요}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["llm"]
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      # 매시간 배치 사이에는 모델을 내려 메모리를 돌려준다.
+      OLLAMA_KEEP_ALIVE: "10m"
+
+volumes:
+  mariadb_data:
+  model_cache:
+  caddy_data:
+  caddy_config:
+  ollama_models:

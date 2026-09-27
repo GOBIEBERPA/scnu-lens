@@ -1,0 +1,547 @@
+[
+  {
+    "slug": "IAAS",
+    "name": "국제농축산학과",
+    "url": "https://www.scnu.ac.kr/IAAS/na/ntt/selectNttList.do?mi=9982&bbsId=4890"
+  },
+  {
+    "slug": "SmartAgriculture",
+    "name": "스마트농업융합전공",
+    "url": "https://www.scnu.ac.kr/SmartAgriculture/na/ntt/selectNttList.do?mi=6870&bbsId=3436"
+  },
+  {
+    "slug": "acc",
+    "name": "회계학전공",
+    "url": "https://www.scnu.ac.kr/acc/na/ntt/selectNttList.do?mi=3147&bbsId=1904"
+  },
+  {
+    "slug": "advcompmat",
+    "name": "첨단부품소재공학과('23년 첨단신소재공학과로 통합)",
+    "url": "https://www.scnu.ac.kr/advcompmat/na/ntt/selectNttList.do?mi=6088&bbsId=3039"
+  },
+  {
+    "slug": "agedu",
+    "name": "농업교육과",
+    "url": "https://www.scnu.ac.kr/agedu/na/ntt/selectNttList.do?mi=2808&bbsId=1747"
+  },
+  {
+    "slug": "agrieco",
+    "name": "농업경제학전공",
+    "url": "https://www.scnu.ac.kr/agrieco/na/ntt/selectNttList.do?mi=2314&bbsId=1551"
+  },
+  {
+    "slug": "agroscience",
+    "name": "농생명과학전공",
+    "url": "https://www.scnu.ac.kr/agroscience/na/ntt/selectNttList.do?mi=6235&bbsId=3129"
+  },
+  {
+    "slug": "ama",
+    "name": "우주항공첨단소재스쿨",
+    "url": "https://www.scnu.ac.kr/ama/na/ntt/selectNttList.do?mi=9704&bbsId=4815"
+  },
+  {
+    "slug": "ani",
+    "name": "만화애니메이션학전공",
+    "url": "https://www.scnu.ac.kr/ani/na/ntt/selectNttList.do?mi=8664&bbsId=1678"
+  },
+  {
+    "slug": "aniculture",
+    "name": "애니메이션·문화콘텐츠스쿨",
+    "url": "https://www.scnu.ac.kr/aniculture/na/ntt/selectNttList.do?mi=9659&bbsId=4810"
+  },
+  {
+    "slug": "animal",
+    "name": "동물자원과학전공",
+    "url": "https://www.scnu.ac.kr/animal/na/ntt/selectNttList.do?mi=2204&bbsId=1505"
+  },
+  {
+    "slug": "archi",
+    "name": "건축학부",
+    "url": "https://www.scnu.ac.kr/archi/na/ntt/selectNttList.do?mi=3697&bbsId=2124"
+  },
+  {
+    "slug": "ba",
+    "name": "경영학전공",
+    "url": "https://www.scnu.ac.kr/ba/na/ntt/selectNttList.do?mi=3041&bbsId=1862"
+  },
+  {
+    "slug": "bk21agric",
+    "name": "IT-Bio융합시스템농업교육연구단(IT-bio융합시스템전공)",
+    "url": "https://www.scnu.ac.kr/bk21agric/na/ntt/selectNttList.do?mi=8222&bbsId=4102"
+  },
+  {
+    "slug": "case",
+    "name": "농업과학교육원",
+    "url": "https://www.scnu.ac.kr/case/na/ntt/selectNttList.do?mi=4776&bbsId=2417"
+  },
+  {
+    "slug": "chemedu",
+    "name": "화학교육과",
+    "url": "https://www.scnu.ac.kr/chemedu/na/ntt/selectNttList.do?mi=2883&bbsId=1782"
+  },
+  {
+    "slug": "chemeng",
+    "name": "화학공학전공",
+    "url": "https://www.scnu.ac.kr/chemeng/na/ntt/selectNttList.do?mi=3797&bbsId=2153"
+  },
+  {
+    "slug": "chemistry",
+    "name": "화학전공",
+    "url": "https://www.scnu.ac.kr/chemistry/na/ntt/selectNttList.do?mi=3914&bbsId=2203"
+  },
+  {
+    "slug": "china",
+    "name": "글로벌중국학전공",
+    "url": "https://www.scnu.ac.kr/china/na/ntt/selectNttList.do?mi=3312&bbsId=1961"
+  },
+  {
+    "slug": "civil",
+    "name": "토목공학전공",
+    "url": "https://www.scnu.ac.kr/civil/na/ntt/selectNttList.do?mi=3670&bbsId=2111"
+  },
+  {
+    "slug": "climate",
+    "name": "기후변화융합전공",
+    "url": "https://www.scnu.ac.kr/climate/na/ntt/selectNttList.do?mi=8275&bbsId=4142"
+  },
+  {
+    "slug": "cmtv",
+    "name": "콘텐츠매니지먼트 융합전공",
+    "url": "https://www.scnu.ac.kr/cmtv/na/ntt/selectNttList.do?mi=5938&bbsId=2939"
+  },
+  {
+    "slug": "comedu",
+    "name": "컴퓨터교육과",
+    "url": "https://www.scnu.ac.kr/comedu/na/ntt/selectNttList.do?mi=3474&bbsId=2030"
+  },
+  {
+    "slug": "cooking",
+    "name": "조리과학전공",
+    "url": "https://www.scnu.ac.kr/cooking/na/ntt/selectNttList.do?mi=2947&bbsId=1809"
+  },
+  {
+    "slug": "design",
+    "name": "영상디자인학전공",
+    "url": "https://www.scnu.ac.kr/design/na/ntt/selectNttList.do?mi=3628&bbsId=2086"
+  },
+  {
+    "slug": "dorm",
+    "name": "학생생활관",
+    "url": "https://www.scnu.ac.kr/dorm/na/ntt/selectNttList.do?mi=1337&bbsId=1126"
+  },
+  {
+    "slug": "dwellcare",
+    "name": "디지털웰케어융합전공",
+    "url": "https://www.scnu.ac.kr/dwellcare/na/ntt/selectNttList.do?mi=9458&bbsId=4734"
+  },
+  {
+    "slug": "econo",
+    "name": "경제학전공",
+    "url": "https://www.scnu.ac.kr/econo/na/ntt/selectNttList.do?mi=3117&bbsId=1891"
+  },
+  {
+    "slug": "edu",
+    "name": "사범대학",
+    "url": "https://www.scnu.ac.kr/edu/na/ntt/selectNttList.do?mi=4199&bbsId=2289"
+  },
+  {
+    "slug": "elec",
+    "name": "전기공학전공",
+    "url": "https://www.scnu.ac.kr/elec/na/ntt/selectNttList.do?mi=3883&bbsId=2190"
+  },
+  {
+    "slug": "electronics",
+    "name": "전자공학전공",
+    "url": "https://www.scnu.ac.kr/electronics/na/ntt/selectNttList.do?mi=3964&bbsId=2221"
+  },
+  {
+    "slug": "engfund",
+    "name": "공과대학학술재단",
+    "url": "https://www.scnu.ac.kr/engfund/na/ntt/selectNttList.do?mi=8680&bbsId=4479"
+  },
+  {
+    "slug": "englishedu",
+    "name": "영어교육과",
+    "url": "https://www.scnu.ac.kr/englishedu/na/ntt/selectNttList.do?mi=3545&bbsId=2057"
+  },
+  {
+    "slug": "environedu",
+    "name": "환경교육과",
+    "url": "https://www.scnu.ac.kr/environedu/na/ntt/selectNttList.do?mi=3221&bbsId=1931"
+  },
+  {
+    "slug": "environment",
+    "name": "환경공학전공",
+    "url": "https://www.scnu.ac.kr/environment/na/ntt/selectNttList.do?mi=3197&bbsId=1921"
+  },
+  {
+    "slug": "ese",
+    "name": "에너지응용공학전공",
+    "url": "https://www.scnu.ac.kr/ese/na/ntt/selectNttList.do?mi=10119&bbsId=4959"
+  },
+  {
+    "slug": "faculty",
+    "name": "교수회",
+    "url": "https://www.scnu.ac.kr/faculty/na/ntt/selectNttList.do?mi=4856&bbsId=2436"
+  },
+  {
+    "slug": "fashion",
+    "name": "패션디자인학전공",
+    "url": "https://www.scnu.ac.kr/fashion/na/ntt/selectNttList.do?mi=3449&bbsId=2020"
+  },
+  {
+    "slug": "fc",
+    "name": "평생교육스쿨",
+    "url": "https://www.scnu.ac.kr/fc/na/ntt/selectNttList.do?mi=2060&bbsId=1426"
+  },
+  {
+    "slug": "financial",
+    "name": "글로컬금융공학전공",
+    "url": "https://www.scnu.ac.kr/financial/na/ntt/selectNttList.do?mi=9258&bbsId=4675"
+  },
+  {
+    "slug": "fn",
+    "name": "식품영양학과",
+    "url": "https://www.scnu.ac.kr/fn/na/ntt/selectNttList.do?mi=2519&bbsId=1630"
+  },
+  {
+    "slug": "forest",
+    "name": "산림자원학전공",
+    "url": "https://www.scnu.ac.kr/forest/na/ntt/selectNttList.do?mi=2231&bbsId=1516"
+  },
+  {
+    "slug": "fst",
+    "name": "식품공학전공",
+    "url": "https://www.scnu.ac.kr/fst/na/ntt/selectNttList.do?mi=2245&bbsId=1518"
+  },
+  {
+    "slug": "fund",
+    "name": "대학발전기금",
+    "url": "https://www.scnu.ac.kr/fund/na/ntt/selectNttList.do?mi=4068&bbsId=2255"
+  },
+  {
+    "slug": "futureenvironment",
+    "name": "미래환경융합전공",
+    "url": "https://www.scnu.ac.kr/futureenvironment/na/ntt/selectNttList.do?mi=6204&bbsId=3120"
+  },
+  {
+    "slug": "gitrc",
+    "name": "Grand-ICT연구센터(대학원-스마트농업전공)",
+    "url": "https://www.scnu.ac.kr/gitrc/na/ntt/selectNttList.do?mi=6710&bbsId=3378"
+  },
+  {
+    "slug": "glocal",
+    "name": "글로벌 비전 더보기",
+    "url": "https://www.scnu.ac.kr/glocal/na/ntt/selectNttList.do?mi=9087&bbsId=4614"
+  },
+  {
+    "slug": "glocaldorm",
+    "name": "글로컬기숙사",
+    "url": "https://www.scnu.ac.kr/glocaldorm/na/ntt/selectNttList.do?mi=10404&bbsId=5087"
+  },
+  {
+    "slug": "gosi",
+    "name": "고시원",
+    "url": "https://www.scnu.ac.kr/gosi/na/ntt/selectNttList.do?mi=4838&bbsId=2431"
+  },
+  {
+    "slug": "gric",
+    "name": "글로벌지역혁신전략연구센터",
+    "url": "https://www.scnu.ac.kr/gric/na/ntt/selectNttList.do?mi=9275&bbsId=4682"
+  },
+  {
+    "slug": "gscnurise",
+    "name": "RISE사업단",
+    "url": "https://www.scnu.ac.kr/gscnurise/na/ntt/selectNttList.do?mi=9495&bbsId=4760"
+  },
+  {
+    "slug": "gsf",
+    "name": "그린스마트팜스쿨",
+    "url": "https://www.scnu.ac.kr/gsf/na/ntt/selectNttList.do?mi=9579&bbsId=4785"
+  },
+  {
+    "slug": "hanyak",
+    "name": "바이오한약자원학전공",
+    "url": "https://www.scnu.ac.kr/hanyak/na/ntt/selectNttList.do?mi=2341&bbsId=1563"
+  },
+  {
+    "slug": "history",
+    "name": "사학전공",
+    "url": "https://www.scnu.ac.kr/history/na/ntt/selectNttList.do?mi=2414&bbsId=1590"
+  },
+  {
+    "slug": "horti",
+    "name": "원예학전공",
+    "url": "https://www.scnu.ac.kr/horti/na/ntt/selectNttList.do?mi=2484&bbsId=1616"
+  },
+  {
+    "slug": "hrc",
+    "name": "인권센터",
+    "url": "https://www.scnu.ac.kr/hrc/na/ntt/selectNttList.do?mi=4720&bbsId=2400"
+  },
+  {
+    "slug": "humanitas",
+    "name": "교직과·상담심리전공",
+    "url": "https://www.scnu.ac.kr/humanitas/na/ntt/selectNttList.do?mi=3282&bbsId=1948"
+  },
+  {
+    "slug": "huss",
+    "name": "인문사회디지털융합전공",
+    "url": "https://www.scnu.ac.kr/huss/na/ntt/selectNttList.do?mi=9123&bbsId=4630"
+  },
+  {
+    "slug": "hyperhuss",
+    "name": "인문사회융합인재양성전공",
+    "url": "https://www.scnu.ac.kr/hyperhuss/na/ntt/selectNttList.do?mi=9171&bbsId=4642"
+  },
+  {
+    "slug": "icc",
+    "name": "정보전산원",
+    "url": "https://www.scnu.ac.kr/icc/na/ntt/selectNttList.do?mi=4820&bbsId=2423"
+  },
+  {
+    "slug": "ict",
+    "name": "인공지능공학전공",
+    "url": "https://www.scnu.ac.kr/ict/na/ntt/selectNttList.do?mi=6640&bbsId=3342"
+  },
+  {
+    "slug": "iei",
+    "name": "교육혁신본부",
+    "url": "https://www.scnu.ac.kr/iei/na/ntt/selectNttList.do?mi=6156&bbsId=3082"
+  },
+  {
+    "slug": "impact",
+    "name": "IR센터 / 지역사회기여도",
+    "url": "https://www.scnu.ac.kr/impact/na/ntt/selectNttList.do?mi=9430&bbsId=4727"
+  },
+  {
+    "slug": "inservice",
+    "name": "교직원수련원",
+    "url": "https://www.scnu.ac.kr/inservice/na/ntt/selectNttList.do?mi=1401&bbsId=1154"
+  },
+  {
+    "slug": "intelmed",
+    "name": "지능의료기술융합전공",
+    "url": "https://www.scnu.ac.kr/intelmed/na/ntt/selectNttList.do?mi=6189&bbsId=3115"
+  },
+  {
+    "slug": "iphak",
+    "name": "입학안내",
+    "url": "https://www.scnu.ac.kr/iphak/na/ntt/selectNttList.do?mi=1676&bbsId=1213"
+  },
+  {
+    "slug": "japan",
+    "name": "일본어일본문화학전공",
+    "url": "https://www.scnu.ac.kr/japan/na/ntt/selectNttList.do?mi=2438&bbsId=1600"
+  },
+  {
+    "slug": "kbeauty",
+    "name": "케이뷰티화장품융합전공",
+    "url": "https://www.scnu.ac.kr/kbeauty/na/ntt/selectNttList.do?mi=9522&bbsId=4772"
+  },
+  {
+    "slug": "kiiai",
+    "name": "한국산학혁신연구원",
+    "url": "https://www.scnu.ac.kr/kiiai/na/ntt/selectNttList.do?mi=9716&bbsId=4826"
+  },
+  {
+    "slug": "korean",
+    "name": "국제한국어교육학과",
+    "url": "https://www.scnu.ac.kr/korean/na/ntt/selectNttList.do?mi=6361&bbsId=3176"
+  },
+  {
+    "slug": "koredu",
+    "name": "국어교육과",
+    "url": "https://www.scnu.ac.kr/koredu/na/ntt/selectNttList.do?mi=3495&bbsId=2037"
+  },
+  {
+    "slug": "land",
+    "name": "조경학전공",
+    "url": "https://www.scnu.ac.kr/land/na/ntt/selectNttList.do?mi=2134&bbsId=1465"
+  },
+  {
+    "slug": "law",
+    "name": "법학전공",
+    "url": "https://www.scnu.ac.kr/law/na/ntt/selectNttList.do?mi=4023&bbsId=2243"
+  },
+  {
+    "slug": "liberal",
+    "name": "자유전공학부",
+    "url": "https://www.scnu.ac.kr/liberal/na/ntt/selectNttList.do?mi=6310&bbsId=3156"
+  },
+  {
+    "slug": "lifelong",
+    "name": "평생교육원",
+    "url": "https://www.scnu.ac.kr/lifelong/na/ntt/selectNttList.do?mi=2084&bbsId=1430"
+  },
+  {
+    "slug": "logis",
+    "name": "물류학전공",
+    "url": "https://www.scnu.ac.kr/logis/na/ntt/selectNttList.do?mi=3294&bbsId=1956"
+  },
+  {
+    "slug": "lowcarbon",
+    "name": "ICT연구센터",
+    "url": "https://www.scnu.ac.kr/lowcarbon/na/ntt/selectNttList.do?mi=9619&bbsId=4799"
+  },
+  {
+    "slug": "mae",
+    "name": "기계우주항공공학전공",
+    "url": "https://www.scnu.ac.kr/mae/na/ntt/selectNttList.do?mi=6332&bbsId=3163"
+  },
+  {
+    "slug": "materials",
+    "name": "첨단신소재공학전공",
+    "url": "https://www.scnu.ac.kr/materials/na/ntt/selectNttList.do?mi=3338&bbsId=1973"
+  },
+  {
+    "slug": "mathedu",
+    "name": "수학교육과",
+    "url": "https://www.scnu.ac.kr/mathedu/na/ntt/selectNttList.do?mi=3800&bbsId=2154"
+  },
+  {
+    "slug": "munchang",
+    "name": "문예창작학전공",
+    "url": "https://www.scnu.ac.kr/munchang/na/ntt/selectNttList.do?mi=3388&bbsId=2009"
+  },
+  {
+    "slug": "nature",
+    "name": "천연물의약산업 융합전공",
+    "url": "https://www.scnu.ac.kr/nature/na/ntt/selectNttList.do?mi=5600&bbsId=2796"
+  },
+  {
+    "slug": "nursing",
+    "name": "간호학과",
+    "url": "https://www.scnu.ac.kr/nursing/na/ntt/selectNttList.do?mi=2581&bbsId=1661"
+  },
+  {
+    "slug": "pa",
+    "name": "행정학전공",
+    "url": "https://www.scnu.ac.kr/pa/na/ntt/selectNttList.do?mi=3073&bbsId=1877"
+  },
+  {
+    "slug": "pharm",
+    "name": "약학대학·약학과",
+    "url": "https://www.scnu.ac.kr/pharm/na/ntt/selectNttList.do?mi=4983&bbsId=2491"
+  },
+  {
+    "slug": "philosophy",
+    "name": "철학전공",
+    "url": "https://www.scnu.ac.kr/philosophy/na/ntt/selectNttList.do?mi=3602&bbsId=2076"
+  },
+  {
+    "slug": "photo",
+    "name": "사진미디어학전공",
+    "url": "https://www.scnu.ac.kr/photo/na/ntt/selectNttList.do?mi=2982&bbsId=1828"
+  },
+  {
+    "slug": "physicsedu",
+    "name": "물리교육과",
+    "url": "https://www.scnu.ac.kr/physicsedu/na/ntt/selectNttList.do?mi=2861&bbsId=1771"
+  },
+  {
+    "slug": "piano",
+    "name": "음악예술융합학전공",
+    "url": "https://www.scnu.ac.kr/piano/na/ntt/selectNttList.do?mi=2777&bbsId=1730"
+  },
+  {
+    "slug": "press",
+    "name": "언론사",
+    "url": "https://www.scnu.ac.kr/press/na/ntt/selectNttList.do?mi=2992&bbsId=1836"
+  },
+  {
+    "slug": "renewenergy",
+    "name": "신재생에너지융합전공",
+    "url": "https://www.scnu.ac.kr/renewenergy/na/ntt/selectNttList.do?mi=8353&bbsId=4222"
+  },
+  {
+    "slug": "rirc",
+    "name": "지역혁신연구센터",
+    "url": "https://www.scnu.ac.kr/rirc/na/ntt/selectNttList.do?mi=8834&bbsId=4538"
+  },
+  {
+    "slug": "sangi",
+    "name": "융합바이오시스템기계공학과",
+    "url": "https://www.scnu.ac.kr/SCNU/na/ntt/selectNttList.do?mi=1131&bbsId=1040"
+  },
+  {
+    "slug": "sanhak",
+    "name": "산학협력교육센터",
+    "url": "https://www.scnu.ac.kr/sanhak/na/ntt/selectNttList.do?mi=8738&bbsId=4418"
+  },
+  {
+    "slug": "sce",
+    "name": "컴퓨터공학전공",
+    "url": "https://www.scnu.ac.kr/sce/na/ntt/selectNttList.do?mi=3938&bbsId=2210"
+  },
+  {
+    "slug": "scnuai",
+    "name": "AI인재양성부트캠프사업단",
+    "url": "https://www.scnu.ac.kr/scnuai/na/ntt/selectNttList.do?mi=10241&bbsId=5045"
+  },
+  {
+    "slug": "scnugtep",
+    "name": "GTEP사업단",
+    "url": "https://www.scnu.ac.kr/scnugtep/na/ntt/selectNttList.do?mi=9211&bbsId=4659"
+  },
+  {
+    "slug": "scnurotc",
+    "name": "학군단",
+    "url": "https://www.scnu.ac.kr/scnurotc/na/ntt/selectNttList.do?mi=4704&bbsId=2395"
+  },
+  {
+    "slug": "scnusupport",
+    "name": "장애학생지원센터",
+    "url": "https://www.scnu.ac.kr/scnusupport/na/ntt/selectNttList.do?mi=4686&bbsId=2392"
+  },
+  {
+    "slug": "scnusw",
+    "name": "SW중심대학사업단",
+    "url": "https://www.scnu.ac.kr/scnusw/na/ntt/selectNttList.do?mi=8889&bbsId=4548"
+  },
+  {
+    "slug": "secgy",
+    "name": "과학영재교육원",
+    "url": "https://www.scnu.ac.kr/secgy/na/ntt/selectNttList.do?mi=4659&bbsId=2380"
+  },
+  {
+    "slug": "siacf",
+    "name": "산학협력단",
+    "url": "https://www.scnu.ac.kr/siacf/na/ntt/selectNttList.do?mi=2923&bbsId=1803"
+  },
+  {
+    "slug": "smartfactory",
+    "name": "스마트팩토리혁신학과",
+    "url": "https://www.scnu.ac.kr/smartfactory/na/ntt/selectNttList.do?mi=8650&bbsId=4458"
+  },
+  {
+    "slug": "soedu",
+    "name": "사회교육과",
+    "url": "https://www.scnu.ac.kr/soedu/na/ntt/selectNttList.do?mi=3519&bbsId=2047"
+  },
+  {
+    "slug": "sport",
+    "name": "사회체육학전공",
+    "url": "https://www.scnu.ac.kr/sport/na/ntt/selectNttList.do?mi=3428&bbsId=2013"
+  },
+  {
+    "slug": "stu_counsel",
+    "name": "학생상담센터",
+    "url": "https://www.scnu.ac.kr/stu_counsel/na/ntt/selectNttList.do?mi=4636&bbsId=2377"
+  },
+  {
+    "slug": "trade",
+    "name": "무역학전공",
+    "url": "https://www.scnu.ac.kr/trade/na/ntt/selectNttList.do?mi=2373&bbsId=1577"
+  },
+  {
+    "slug": "union",
+    "name": "직원연합회",
+    "url": "https://www.scnu.ac.kr/union/na/ntt/selectNttList.do?mi=4914&bbsId=2457"
+  },
+  {
+    "slug": "welfare",
+    "name": "사회복지학전공",
+    "url": "https://www.scnu.ac.kr/welfare/na/ntt/selectNttList.do?mi=2393&bbsId=1584"
+  }
+]

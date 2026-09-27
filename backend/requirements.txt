@@ -1,0 +1,17 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+sqlalchemy==2.0.43
+pymysql==1.1.1
+pydantic==2.11.7
+pydantic-settings==2.10.1
+httpx==0.28.1
+beautifulsoup4==4.13.4
+fastembed==0.8.0
+apscheduler==3.11.0
+python-dateutil==2.9.0.post0
+tenacity==9.1.2
+pytest==8.4.1
+pytest-asyncio==1.1.0
+pywebpush==2.0.3
+pypdf==5.9.0
+olefile==0.47

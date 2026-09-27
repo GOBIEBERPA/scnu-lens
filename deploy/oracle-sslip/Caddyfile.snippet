@@ -1,0 +1,10 @@
+__HOST__ {
+	encode gzip
+	# /api는 FastAPI로, 나머지는 Next.js 화면으로 보낸다(화면은 https에서 같은 주소의 /api를 부른다).
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8100
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3100
+	}
+}

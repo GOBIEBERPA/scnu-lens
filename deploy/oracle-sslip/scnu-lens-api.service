@@ -1,0 +1,26 @@
+[Unit]
+Description=SCNU Lens API (FastAPI, 매시간 수집, 알림)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=scnulens
+Group=scnulens
+WorkingDirectory=/opt/scnu-lens/backend
+# AI 분류 모델(약 220MB)을 한 번 받아 두고 재시작해도 다시 받지 않게 한다.
+Environment=FASTEMBED_CACHE_PATH=/opt/scnu-lens/.cache/fastembed
+Environment=HF_HOME=/opt/scnu-lens/.cache/huggingface
+Environment=TZ=Asia/Seoul
+# 스케줄러가 한 번만 돌도록 워커는 하나.
+ExecStart=/opt/scnu-lens/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8100 --workers 1 --proxy-headers
+Restart=always
+RestartSec=5
+# 같은 서버의 마인크래프트(7.5GB 고정)를 지키려고 상한을 둔다. 평소 약 750MB.
+MemoryMax=1536M
+Nice=5
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

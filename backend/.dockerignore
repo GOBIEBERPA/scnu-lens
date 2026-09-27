@@ -1,0 +1,10 @@
+# 비밀값·로컬 DB·윈도우 가상환경이 이미지에 들어가지 않게 한다.
+.env
+.env.*
+!.env.example
+.venv/
+*.db
+*.sqlite3
+__pycache__/
+.pytest_cache/
+tests/
