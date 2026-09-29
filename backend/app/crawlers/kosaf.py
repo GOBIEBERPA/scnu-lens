@@ -2,8 +2,8 @@
 
 전국 지자체·민간 장학재단·공공기관의 장학 상품(약 1,900건)이 매달 새 파일로 올라온다. 작년 모집분도
 섞여 있어 모집종료일이 지나지 않았고 한 달 안에 모집을 시작하는 것만 남긴다.
-거주지 조건(지역 연고)이 있는 장학금은 숨기지 않고 제목에 "(지역 연고)"를 붙인다. 순천대 학생도
-보호자 주소지가 그 지역이면 신청할 수 있기 때문이다.
+거주지 조건(지역 연고)이 있는 장학금은 가져오지 않는다. 이 앱은 학교 공지 모음이지 지역 장학금 알리미가 아니라서,
+누구나 신청할 수 있는 전국 대상 장학금만 교외 소식으로 보여준다.
 파일데이터 자동 변환 API라 주소 끝 uddi가 매달 바뀌어, dataq처럼 명세(OAS)에서 최신 경로를 찾는다.
 """
 
@@ -68,8 +68,15 @@ def _grades(value: object) -> str:
     return ", ".join(parts) or text[:40]
 
 
+def regional(row: dict) -> bool:
+    """입력: API 행, 출력: 거주지(지역 연고) 조건이 있는 장학금인지 여부."""
+    return bool(_clean(row.get("지역거주여부 상세내용"))) or "지역연고" in str(row.get("학자금유형구분") or "").replace(" ", "")
+
+
 def is_current(row: dict, today: date) -> bool:
-    """입력: API 행·오늘, 출력: 마감 전이고 한 달 안에 모집을 시작하는 대학생 장학금인지 여부."""
+    """입력: API 행·오늘, 출력: 마감 전이고 한 달 안에 모집을 시작하는 전국 대상 대학생 장학금인지 여부."""
+    if regional(row):
+        return False
     start, end = str(row.get("모집시작일") or "")[:10], str(row.get("모집종료일") or "")[:10]
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", end) or end < today.isoformat():
         return False
@@ -84,7 +91,6 @@ def row_notice(row: dict) -> CrawledNotice:
     """입력: API 행, 출력: 상세 카드 칸(대상·기간·지원내용·제출서류·주관)이 채워지는 모양의 공지."""
     org, name = _clean(row.get("운영기관명"), 60), _clean(row.get("상품명"), 80)
     start, end = str(row.get("모집시작일") or "")[:10], str(row.get("모집종료일") or "")[:10]
-    region = _clean(row.get("지역거주여부 상세내용"))
     site = str(row.get("홈페이지 주소") or "").strip()
     if site and not site.startswith("http"):
         site = f"https://{site}"
@@ -98,7 +104,6 @@ def row_notice(row: dict) -> CrawledNotice:
         f"접수 마감: {end}까지",
         f"접수 시작: {start}" if start else None,
         f"모집기간: {start} ~ {end}" if start else f"모집기간: ~ {end}",
-        f"※ 지역 연고 장학금: {region}" if region else None,
         f"지원대상: {' / '.join(targets)}",
         f"지원내용: {_clean(row.get('지원내역 상세내용'))}" if _clean(row.get("지원내역 상세내용")) else None,
         f"선발인원: {_clean(row.get('선발인원 상세내용'), 80)}" if _clean(row.get("선발인원 상세내용")) else None,
@@ -113,7 +118,7 @@ def row_notice(row: dict) -> CrawledNotice:
     digest = hashlib.sha1(f"{org}|{name}|{end}".encode()).hexdigest()[:16]
     return CrawledNotice(
         external_id=f"kosaf-{digest}",
-        title=f"[{org}] {name}" + (" (지역 연고)" if region else ""),
+        title=f"[{org}] {name}",
         url=site or DATASET_URL,
         raw_text="\n".join(line for line in lines if line),
         # 게시일은 비워 둔다. 모집 시작일을 넣으면 "오래된 공지"로 보고 목록에서 내린다(시험 일정과 같은 방식).
