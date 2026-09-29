@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from app.crawlers.kosaf import is_current, newest_path, row_notice
+from app.crawlers.kosaf import homepage, is_current, newest_path, row_notice
 from app.services.ai import extract_apply_start, extract_deadline, extract_window
 
 TODAY = date(2026, 9, 29)
@@ -51,3 +51,13 @@ def test_newest_path_by_date() -> None:
     }}
     assert newest_path(spec) == "/b"
 
+
+
+def test_homepage_fixes_broken_addresses() -> None:
+    """입력: 원본의 깨진 홈페이지 주소들, 출력: 열리는 주소(없으면 기관 이름 검색)."""
+    assert homepage("http//www.jiheonsf.or.kr", "삼원장학재단") == "http://www.jiheonsf.or.kr"
+    assert homepage("https://www.kosaf.go.kr/ko/scholar.dopg=scholarship05_04_01&naviParam=JH030108", "한국장학재단") ==         "https://www.kosaf.go.kr/ko/scholar.do?pg=scholarship05_04_01&naviParam=JH030108"
+    assert homepage("www.dooeul.or.kr", "두을장학재단") == "https://www.dooeul.or.kr"
+    assert homepage("해당없음", "동산장학회").startswith("https://search.naver.com/search.naver?query=")
+    assert homepage("", "동산장학회").startswith("https://search.naver.com/")
+    assert homepage("https://cafe.daum.net/deahamyung/", "대하장학회") == "https://cafe.daum.net/deahamyung/"

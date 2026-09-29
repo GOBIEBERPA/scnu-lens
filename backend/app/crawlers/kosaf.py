@@ -9,6 +9,7 @@
 
 import hashlib
 import re
+from urllib.parse import quote
 from datetime import date, timedelta
 
 import httpx
@@ -18,7 +19,6 @@ from app.crawlers.base import BaseCrawler, CrawledNotice
 from app.crawlers.dataq import API_BASE, SPEC_URL
 
 NAMESPACE = "15028252/v1"
-DATASET_URL = "https://www.data.go.kr/data/15028252/fileData.do"
 PAGE_SIZE = 1000
 MAX_PAGES = 4
 # 모집 시작이 이보다 먼 장학금은 아직 보여주지 않는다(목록이 먼 일정으로 채워지지 않게).
@@ -73,6 +73,22 @@ def regional(row: dict) -> bool:
     return bool(_clean(row.get("지역거주여부 상세내용"))) or "지역연고" in str(row.get("학자금유형구분") or "").replace(" ", "")
 
 
+def homepage(value: object, org: str) -> str:
+    """입력: '홈페이지 주소' 칸·운영기관명, 출력: 열리는 주소.
+
+    원본에 "http//…"(콜론 빠짐), "…/scholar.dopg=…"(? 빠짐), "해당없음" 같은 값이 섞여 있어 고친다.
+    주소가 없으면 기관 이름으로 검색하는 링크를 준다(데이터셋 페이지보다 학생에게 쓸모 있다).
+    """
+    url = str(value or "").strip().split()[0] if str(value or "").strip() else ""
+    url = re.sub(r"^(https?)//", r"\1://", url, flags=re.IGNORECASE)
+    url = re.sub(r"\.(do|jsp|asp|aspx|php)(?=[A-Za-z_]+=)", r".\1?", url)
+    if url and not re.match(r"^https?://", url, re.IGNORECASE):
+        url = f"https://{url}"
+    if not re.match(r"^https?://[A-Za-z0-9.-]+\.[A-Za-z]{2,}", url):
+        return f"https://search.naver.com/search.naver?query={quote(org + ' 장학금')}"
+    return url
+
+
 def is_current(row: dict, today: date) -> bool:
     """입력: API 행·오늘, 출력: 마감 전이고 한 달 안에 모집을 시작하는 전국 대상 대학생 장학금인지 여부."""
     if regional(row):
@@ -91,9 +107,7 @@ def row_notice(row: dict) -> CrawledNotice:
     """입력: API 행, 출력: 상세 카드 칸(대상·기간·지원내용·제출서류·주관)이 채워지는 모양의 공지."""
     org, name = _clean(row.get("운영기관명"), 60), _clean(row.get("상품명"), 80)
     start, end = str(row.get("모집시작일") or "")[:10], str(row.get("모집종료일") or "")[:10]
-    site = str(row.get("홈페이지 주소") or "").strip()
-    if site and not site.startswith("http"):
-        site = f"https://{site}"
+    site = homepage(row.get("홈페이지 주소"), org)
     targets = [_grades(row.get("학년구분"))]
     for label, key in (("성적", "성적기준 상세내용"), ("소득", "소득기준 상세내용"), ("자격", "특정자격 상세내용")):
         value = _clean(row.get(key), 140)
@@ -111,7 +125,7 @@ def row_notice(row: dict) -> CrawledNotice:
         f"제출서류: {_clean(row.get('제출서류 상세내용'))}" if _clean(row.get("제출서류 상세내용")) else None,
         f"추천: {_clean(row.get('추천필요여부 상세내용'), 100)}" if _clean(row.get("추천필요여부 상세내용")) else None,
         f"자격제한: {_clean(row.get('자격제한 상세내용'))}" if _clean(row.get("자격제한 상세내용")) else None,
-        f"신청방법: 운영기관 홈페이지에서 신청 ({site})" if site else "신청방법: 운영기관 공고 확인",
+        f"신청방법: 운영기관 홈페이지에서 신청 ({site})",
         f"운영기관: {org} ({_clean(row.get('운영기관구분'), 30) or '기관'})",
         "출처: 한국장학재단 학자금지원정보(공공데이터포털)",
     ]
@@ -119,7 +133,7 @@ def row_notice(row: dict) -> CrawledNotice:
     return CrawledNotice(
         external_id=f"kosaf-{digest}",
         title=f"[{org}] {name}",
-        url=site or DATASET_URL,
+        url=site,
         raw_text="\n".join(line for line in lines if line),
         # 게시일은 비워 둔다. 모집 시작일을 넣으면 "오래된 공지"로 보고 목록에서 내린다(시험 일정과 같은 방식).
         published_at=None,
