@@ -744,3 +744,4 @@ button.setup-card { width: 100%; border: 0; font: inherit; text-align: left; cur
 .chips .sort select { appearance: none; border: 0; background: transparent; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 6px 4px; cursor: pointer; }
 .chips .sort { display: inline-flex; align-items: center; }
 .chips .sort::after { content: "▾"; font-size: 11px; color: var(--muted); margin-left: -2px; }
+.nowrap { white-space: nowrap; }

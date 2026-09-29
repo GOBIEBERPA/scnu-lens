@@ -1,5 +1,5 @@
 import { BellRing, CalendarClock, CalendarPlus, ExternalLink, Share2, X } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { CategoryTag } from "@/components/category-tag";
 import { SaveButton } from "@/components/feed/save-button";
@@ -9,17 +9,25 @@ import type { Notice } from "@/lib/types";
 
 type Props = { notice: Notice; onClose: () => void; saved: boolean; onToggleSave: () => void };
 
-const URL_RE = /(https?:\/\/[^\s\]\)]+)/g;
+// 주소(1) · 메일(2) · 전화번호(3). 메일·전화는 괄호나 조사("…@scnu.ac.kr)로")가 붙어도 주소만 잡는다.
+const LINK_RE = /(https?:\/\/[^\s\]\)]+)|([\w.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})|(0\d{1,2}[-)\s]?\d{3,4}-\d{4})/g;
 
-// 입력: 칸 값, 출력: 안에 든 주소(신청 폼 등)를 바로 누를 수 있는 링크로 바꾼 내용.
+// 입력: 칸 값, 출력: 안에 든 주소(신청 폼 등)·메일·전화번호를 바로 누를 수 있는 링크로 바꾼 내용.
+// 메일은 메일 앱, 전화번호는 전화 앱으로 열리고, 휴대폰에서 중간에 줄바꿈되지 않게 한 덩어리로 둔다.
 function Linkified({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(URL_RE).map((part, index) =>
-        index % 2 === 1 ? <a key={index} href={part} target="_blank" rel="noreferrer">{part}</a> : part,
-      )}
-    </>
-  );
+  const parts: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(LINK_RE)) {
+    const [whole, url, mail, phone] = match;
+    const at = match.index ?? 0;
+    if (at > last) parts.push(text.slice(last, at));
+    if (url) parts.push(<a key={at} href={url} target="_blank" rel="noreferrer">{url}</a>);
+    else if (mail) parts.push(<a key={at} className="nowrap" href={`mailto:${mail}`}>{mail}</a>);
+    else if (phone) parts.push(<a key={at} className="nowrap" href={`tel:${phone.replace(/[^\d]/g, "")}`}>{phone}</a>);
+    last = at + whole.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
 }
 
 // 입력: 원문 주소, 출력: 원문 버튼 문구(학교 공지가 아닌데 "학교 원문"이라고 하지 않게).

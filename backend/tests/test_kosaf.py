@@ -80,3 +80,33 @@ def test_school_scholarship_board_is_not_external(client) -> None:
     titles = lambda origin: [n["title"] for n in api.get("/api/notices", params={"origin": origin}).json()["items"]]  # noqa: E731
     assert titles("school") == ["교내 성적장학"]
     assert titles("external") == ["[삼원장학재단] 삼원장학생"]
+
+
+def test_moved_site_and_dead_link_fallback() -> None:
+    """입력: 옛 도메인(kyswf.or.kr)·깨진 것으로 확인된 주소, 출력: 새 주소 / 기관 이름 검색 링크."""
+    assert homepage("http://www.kyswf.or.kr", "한국야쿠르트 사회복지재단") == "https://www.ybz.or.kr/support/scholarship-apply1"
+    broken = row_notice({**ROW, "홈페이지 주소": "https://broken.example.kr"}, {"https://broken.example.kr"})
+    assert broken.url.startswith("https://search.naver.com/search.naver?query=")
+
+
+def test_dead_link_rules() -> None:
+    """입력: 인증서 오류·404·시간 초과·정상 응답, 출력: 앞의 둘만 깨진 주소로 본다."""
+    import asyncio
+
+    import httpx
+
+    from app.crawlers.kosaf import dead_link
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        host = request.url.host
+        if host == "ssl.example.kr":
+            raise httpx.ConnectError("certificate verify failed")
+        if host == "slow.example.kr":
+            raise httpx.ReadTimeout("timed out")
+        return httpx.Response(404 if host == "gone.example.kr" else 200)
+
+    async def run() -> list[bool]:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            return [await dead_link(client, f"https://{h}.example.kr") for h in ("ssl", "gone", "slow", "ok")]
+
+    assert asyncio.run(run()) == [True, True, False, False]

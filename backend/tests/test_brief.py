@@ -89,3 +89,19 @@ def test_only_deadline_known_is_marked_as_such() -> None:
     """입력: 날짜 범위 없이 마감일만 알려진 공지, 출력: 기간 칸에 '마감일만 확인'이라 밝힘을 검증한다."""
     brief = _as_dict(build_brief("신청 안내", "기한 내 신청 바랍니다.", "", "2026-10-01", []))
     assert brief["기간"].value == "~ 2026-10-01 (마감일만 확인)"
+
+
+def test_submission_email_is_not_contact() -> None:
+    """입력: '신청방법: 담당자 메일(…)로 제출' 줄과 뒤의 '문의: …' 줄, 출력: 문의에는 문의 줄만, 번호·기호는 뗀다."""
+    body = "마. 신청방법: 담당자 메일(hs5077@scnu.ac.kr)로 신청서류 제출\n○ 문의처: 교무처 061-750-3000"
+    brief = _as_dict(build_brief("수강생 모집 안내", body, "", None, []))
+    assert brief["문의"].value == "문의처: 교무처 061-750-3000" or brief["문의"].value == "교무처 061-750-3000"
+    only_submit = "6. 접수방법: 이메일 제출(tpz314@scnu.ac.kr)"
+    assert "접수방법" not in (_as_dict(build_brief("공모전", only_submit, "", None, []))["문의"].value or "")
+
+
+def test_hwp_bullet_marks_are_removed() -> None:
+    """입력: 한글 파일 글머리 기호(\uf06d·￮)가 붙은 줄, 출력: 기호 없이 라벨을 인식하고 제출처 메일은 문의로 안 잡는다."""
+    body = " 신청방법: 담당자 메일(hs5077@scnu.ac.kr)로 제출\n￮ 순천대학교 AI중심대학사업단(☎061-750-5329)"
+    contact = _as_dict(build_brief("안내", body, "", None, []))["문의"].value
+    assert contact == "순천대학교 AI중심대학사업단(☎061-750-5329)"

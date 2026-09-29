@@ -7,10 +7,11 @@
 파일데이터 자동 변환 API라 주소 끝 uddi가 매달 바뀌어, dataq처럼 명세(OAS)에서 최신 경로를 찾는다.
 """
 
+import asyncio
 import hashlib
 import re
-from urllib.parse import quote
 from datetime import date, timedelta
+from urllib.parse import quote
 
 import httpx
 
@@ -85,8 +86,38 @@ def homepage(value: object, org: str) -> str:
     if url and not re.match(r"^https?://", url, re.IGNORECASE):
         url = f"https://{url}"
     if not re.match(r"^https?://[A-Za-z0-9.-]+\.[A-Za-z]{2,}", url):
-        return f"https://search.naver.com/search.naver?query={quote(org + ' 장학금')}"
-    return url
+        return search_link(org)
+    host = re.sub(r"^https?://(www\.)?", "", url, flags=re.IGNORECASE).split("/")[0].lower()
+    return MOVED_SITES.get(host, url)
+
+
+def search_link(org: str) -> str:
+    """입력: 운영기관명, 출력: '기관명 장학금' 네이버 검색 주소."""
+    return f"https://search.naver.com/search.naver?query={quote(org + ' 장학금')}"
+
+
+# 기관이 이름·도메인을 바꿨는데 원본 데이터에 옛 주소가 남아 있는 경우(옛 주소는 열리지 않음).
+MOVED_SITES = {
+    # 한국야쿠르트 사회복지재단 → hy사회복지재단(2026-09 확인, 옛 kyswf.or.kr은 인증서 오류)
+    "kyswf.or.kr": "https://www.ybz.or.kr/support/scholarship-apply1",
+}
+
+
+async def dead_link(client: httpx.AsyncClient, url: str) -> bool:
+    """입력: 클라이언트·주소, 출력: 확실히 깨진 주소인지(인증서 오류·없는 도메인·4xx/5xx).
+
+    서버가 해외(오라클 오사카)라 한국 사이트가 응답을 늦게 주거나 막는 경우가 있어,
+    시간 초과는 깨진 것으로 보지 않는다(학생 휴대폰에서는 열린다).
+    """
+    try:
+        response = await client.get(url, follow_redirects=True, timeout=httpx.Timeout(10.0, connect=6.0))
+        return response.status_code >= 400 and response.status_code not in (401, 403, 405, 429)
+    except httpx.TimeoutException:
+        return False
+    except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.UnsupportedProtocol, httpx.InvalidURL):
+        return True
+    except httpx.HTTPError:
+        return False
 
 
 def is_current(row: dict, today: date) -> bool:
@@ -103,11 +134,13 @@ def is_current(row: dict, today: date) -> bool:
     return "장학" in kind and (not school or bool(UNIVERSITY_OK.search(school)))
 
 
-def row_notice(row: dict) -> CrawledNotice:
-    """입력: API 행, 출력: 상세 카드 칸(대상·기간·지원내용·제출서류·주관)이 채워지는 모양의 공지."""
+def row_notice(row: dict, dead: set[str] = frozenset()) -> CrawledNotice:
+    """입력: API 행·깨진 것으로 확인된 주소들, 출력: 상세 카드 칸(대상·기간·지원내용·제출서류·주관)이 채워지는 모양의 공지."""
     org, name = _clean(row.get("운영기관명"), 60), _clean(row.get("상품명"), 80)
     start, end = str(row.get("모집시작일") or "")[:10], str(row.get("모집종료일") or "")[:10]
     site = homepage(row.get("홈페이지 주소"), org)
+    if site in dead:
+        site = search_link(org)
     targets = [_grades(row.get("학년구분"))]
     for label, key in (("성적", "성적기준 상세내용"), ("소득", "소득기준 상세내용"), ("자격", "특정자격 상세내용")):
         value = _clean(row.get(key), 140)
@@ -159,11 +192,15 @@ class KosafScholarshipCrawler(BaseCrawler):
             if not path:
                 return []
             rows = await self._fetch(client, key, path)
-        today = date.today()
-        current = sorted((row for row in rows if is_current(row, today)), key=lambda row: str(row.get("모집종료일")))
+            today = date.today()
+            current = sorted((row for row in rows if is_current(row, today)), key=lambda row: str(row.get("모집종료일")))
+            # 원본의 홈페이지가 깨져 있으면(인증서 오류·없는 도메인 등) 기관 이름 검색 링크로 바꾼다.
+            sites = {homepage(row.get("홈페이지 주소"), _clean(row.get("운영기관명"), 60)) for row in current}
+            checked = await asyncio.gather(*(dead_link(client, site) for site in sites if "search.naver.com" not in site))
+            dead = {site for site, broken in zip([s for s in sites if "search.naver.com" not in s], checked) if broken}
         notices: dict[str, CrawledNotice] = {}
         for row in current:
-            notice = row_notice(row)
+            notice = row_notice(row, dead)
             notices.setdefault(notice.external_id, notice)
         return list(notices.values())[: self.limit]
 

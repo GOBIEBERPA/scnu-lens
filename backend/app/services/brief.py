@@ -126,11 +126,26 @@ def _period_from_pattern(lines: list[str], deadline: str | None) -> str | None:
     return f"~ {deadline} (마감일만 확인)" if deadline else None
 
 
+# "신청방법: 담당자 메일(…)로 제출"처럼 메일이 있어도 문의처가 아니라 제출처인 줄의 라벨.
+NOT_CONTACT_LABEL = re.compile(r"방법|제출|신청|접수|보고서|서류|조사|링크|주소")
+# 한글 파일에서 온 글머리 기호: 사용자 정의 영역(U+E000~U+F8FF)과 반각 원(￮).
+ODD_MARKS = re.compile("[-￮]")
+# 줄 머리 번호·기호(마. / 6. / ○ / - 등)
+LEAD_MARK = re.compile(r"^\s*(?:\d{1,2}[.)]|[가-하][.)]|[□■○●◦•▶▷※\-·*])\s*")
+
+
 def _contact_from_pattern(lines: list[str]) -> str | None:
-    """입력: 본문 줄 목록, 출력: 전화번호나 이메일이 있는 줄."""
+    """입력: 본문 줄 목록, 출력: 전화번호나 이메일이 있는 줄(머리 번호는 뗀다).
+
+    '신청방법'·'접수방법'·'결과보고서' 같은 라벨이 붙은 줄의 메일은 제출처라 문의로 보지 않는다.
+    """
     for line in lines:
-        if PHONE.search(line) or EMAIL.search(line):
-            return line
+        if not (PHONE.search(line) or EMAIL.search(line)):
+            continue
+        label = LABEL_LINE.match(line)
+        if label and NOT_CONTACT_LABEL.search(label.group(1)) and "문의" not in label.group(1):
+            continue
+        return LEAD_MARK.sub("", line).strip()
     return None
 
 
@@ -209,6 +224,8 @@ def build_brief(
 
     칸마다 [라벨 → 패턴 → 보조 정보] 순으로 시도하고, 검증을 통과한 첫 값을 쓴다.
     """
+    # 한글 파일의 글머리 기호는 사용자 정의 영역 문자( 등)나 '￮'로 들어와 라벨 인식을 막고 화면에 네모로 보인다.
+    raw_text = ODD_MARKS.sub("", raw_text)
     lines = [line for line in raw_text.splitlines() if line.strip()]
     # '화학교육과 공지' → '화학교육과'. '순천대 학사공지'처럼 붙어 있는 이름은 그대로 둔다.
     board = re.sub(r"\s+공지$", "", source or "").strip()
