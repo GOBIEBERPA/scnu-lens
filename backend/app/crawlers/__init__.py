@@ -1,5 +1,6 @@
 from app.crawlers.dataq import DataqExamCrawler
 from app.crawlers.exam import QnetExamCrawler
+from app.crawlers.kosaf import KosafScholarshipCrawler
 from app.crawlers.kstartup import KStartupCrawler
 from app.crawlers.manual import ManualExamCrawler
 from app.crawlers.scnu import CRAWLER_REGISTRY as _SCNU_REGISTRY, default_sources
@@ -11,6 +12,7 @@ CRAWLER_REGISTRY = {
     "exam_qnet": QnetExamCrawler,
     "exam_dataq": DataqExamCrawler,
     "contest_kstartup": KStartupCrawler,
+    "scholar_kosaf": KosafScholarshipCrawler,
     "exam_manual": ManualExamCrawler,
 }
 

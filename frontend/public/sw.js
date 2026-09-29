@@ -1,5 +1,5 @@
 // 버전을 올리면 activate에서 이전 캐시를 지우므로, 화면을 바꿀 때마다 올린다.
-const CACHE_NAME = "scnu-lens-v14";
+const CACHE_NAME = "scnu-lens-v15";
 const APP_SHELL = ["/", "/manifest.json", "/favicon.ico", "/icon-192.png"];
 
 // 입력: install 이벤트, 출력: 앱 셸을 캐시에 저장해 기본 오프라인 진입을 보장한다.
@@ -40,15 +40,20 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// 입력: 알림 클릭, 출력: 이미 열린 앱 탭이 있으면 그 탭을 알림의 공지로 이동시키고, 없으면 새로 연다.
+// 입력: 알림 클릭, 출력: 앱을 보고 있으면 그 화면을 알림의 공지로 이동시키고, 아니면 앱(설치했으면 앱)으로 새로 연다.
 // 예전에는 열린 탭에 초점만 줘서, 앱이 켜져 있으면 알림을 눌러도 해당 공지가 안 열렸다.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const target = new URL((event.notification.data && event.notification.data.url) || "/", self.location.origin).href;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
-      const opened = windows.find((client) => client.url.startsWith(self.location.origin) && "navigate" in client);
-      if (opened) return opened.navigate(target).then((client) => (client || opened).focus());
+      // 지금 화면에 보이는 창(앱을 보고 있는 중)만 그 자리에서 이동한다.
+      // 뒤에 숨은 브라우저 탭을 고르면 설치한 앱 대신 브라우저가 열리므로, 그때는 openWindow에 맡긴다.
+      // 안드로이드는 앱(WebAPK)이 설치돼 있으면 범위 안 주소를 앱으로 연다.
+      const visible = windows.find(
+        (client) => client.url.startsWith(self.location.origin) && client.visibilityState === "visible" && "navigate" in client,
+      );
+      if (visible) return visible.navigate(target).then((client) => (client || visible).focus());
       return self.clients.openWindow(target);
     }),
   );

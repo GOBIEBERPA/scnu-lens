@@ -5,6 +5,7 @@ uddi가 바뀐다. 그래서 매번 공식 명세(OAS)에서 가장 최근 파�
 공지 모양은 직접 입력 일정(manual.py)과 같게 만들어 마감 D-day·알림·캘린더가 그대로 동작한다.
 """
 
+import re
 from datetime import date
 
 import httpx
@@ -25,7 +26,12 @@ EXAM_SITE = "https://www.dataq.or.kr/"
 
 def latest_path(spec: dict) -> str:
     """입력: OAS 명세, 출력: 요약 끝 날짜(_YYYYMMDD)가 가장 최근인 파일의 API 경로."""
-    paths = [(str(body.get("get", {}).get("summary", "")), path) for path, body in spec.get("paths", {}).items()]
+    # 글자 순이 아니라 끝의 날짜로 고른다. 기관이 파일 이름을 바꾸면 글자 순 최대가 옛 파일일 수 있다.
+    paths = []
+    for path, body in spec.get("paths", {}).items():
+        match = re.search(r"(\d{8})\s*$", str(body.get("get", {}).get("summary", "")))
+        if match:
+            paths.append((match.group(1), path))
     return max(paths)[1] if paths else FALLBACK_PATH
 
 

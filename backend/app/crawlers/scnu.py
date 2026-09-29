@@ -85,6 +85,13 @@ DEFAULT_SOURCES = [
         "category_hint": "행사",
     },
     {
+        "key": "kosaf_scholarship",
+        "name": "교외 장학금(한국장학재단)",
+        "url": "https://www.data.go.kr/data/15028252/fileData.do",
+        "parser_type": "scholar_kosaf",
+        "category_hint": "장학",
+    },
+    {
         "key": "exam_manual",
         "name": "직접 입력한 시험일정",
         "url": "app/crawlers/manual_exams.json",

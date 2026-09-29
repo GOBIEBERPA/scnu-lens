@@ -32,7 +32,7 @@ type Props = {
 const TABS: { value: FeedView; label: string }[] = [
   { value: "mine", label: "나에게" },
   { value: "school", label: "학교" },
-  { value: "external", label: "공모전·자격증" },
+  { value: "external", label: "장학·공모·자격증" },
 ];
 
 const SORT_LABELS: Record<FeedSort, string> = {

@@ -92,6 +92,9 @@ def source_locked_category(notice: Notice) -> str | None:
     # K-Startup 공고는 학교 공지용 분류기가 '창업 아카데미'를 장학·학사로 잘못 보므로 제목으로 정한다.
     if source is not None and source.parser_type == "contest_kstartup":
         return "경진대회" if CONTEST_RE.search(notice.title) else "행사"
+    # 한국장학재단 장학 상품은 모두 장학이다(학교 장학공지 게시판까지 고정하지 않게 소스로 정한다).
+    if source is not None and source.parser_type == "scholar_kosaf":
+        return "장학"
     hint = source.category_hint if source is not None else None
     return hint if hint in SOURCE_LOCKED_CATEGORIES else None
 
@@ -519,8 +522,23 @@ def department_core(name: str | None) -> str:
     return core if len(core) >= 3 else name
 
 
+# 교외 장학금 중 거주지 조건이 있는 것은 제목에 "(지역 연고)"가 붙는다(crawlers/kosaf.py).
+REGIONAL_MARK = "(지역 연고)"
+HOME_REGION_TEXT = re.compile(r"전남|전라남도|광주|순천|여수|목포|광양|나주")
+
+
+def elsewhere_regional(notice: Notice) -> bool:
+    """입력: 공지, 출력: 전남·광주가 아닌 다른 지역 연고 장학금인지 여부(목록엔 보이되 추천은 안 한다)."""
+    if REGIONAL_MARK not in notice.title:
+        return False
+    region = next((line for line in (notice.raw_text or "").splitlines() if line.startswith("※ 지역 연고")), "")
+    return not HOME_REGION_TEXT.search(f"{notice.title} {region}")
+
+
 def relevance_score(user: UserProfile, notice: Notice) -> float:
     """입력: 사용자·공지, 출력: 학과/관심사/선택 분야 일치에 따른 단순 설명 가능 점수."""
+    if elsewhere_regional(notice):
+        return 0.0
     score = 0.0
     if _from_own_department_board(user, notice):
         score += 3.0

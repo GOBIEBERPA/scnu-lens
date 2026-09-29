@@ -109,7 +109,7 @@ def _today_range() -> tuple[datetime, datetime]:
 def _external_source_ids():
     """입력 없음, 출력: 학교 밖 소스(공모전 모음·시험 일정)의 ID를 고르는 하위 쿼리."""
     return select(CrawlerSource.id).where(
-        or_(CrawlerSource.parser_type.like("exam_%"), CrawlerSource.parser_type.like("contest_%"))
+        or_(CrawlerSource.parser_type.like("exam_%"), CrawlerSource.parser_type.like("contest_%"), CrawlerSource.parser_type.like("scholar_%"))
     )
 
 
