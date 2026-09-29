@@ -61,3 +61,22 @@ def test_homepage_fixes_broken_addresses() -> None:
     assert homepage("해당없음", "동산장학회").startswith("https://search.naver.com/search.naver?query=")
     assert homepage("", "동산장학회").startswith("https://search.naver.com/")
     assert homepage("https://cafe.daum.net/deahamyung/", "대하장학회") == "https://cafe.daum.net/deahamyung/"
+
+
+def test_school_scholarship_board_is_not_external(client) -> None:
+    """입력: 학교 장학공지(parser_type=scholarship)와 교외 장학금(scholar_kosaf) 공지, 출력: 학교 탭·교외 탭에 각각 나온다."""
+    from app.models import CrawlerSource
+    from helpers import make_notice
+
+    api, factory = client
+    with factory() as db:
+        school = CrawlerSource(key="sch", name="순천대 장학공지", url="u", parser_type="scholarship", category_hint="장학")
+        kosaf = CrawlerSource(key="ks", name="교외 장학금", url="u", parser_type="scholar_kosaf", category_hint="장학")
+        db.add_all([school, kosaf])
+        db.flush()
+        db.add(make_notice("교내 성적장학", source_id=school.id, category="장학"))
+        db.add(make_notice("[삼원장학재단] 삼원장학생", source_id=kosaf.id, category="장학"))
+        db.commit()
+    titles = lambda origin: [n["title"] for n in api.get("/api/notices", params={"origin": origin}).json()["items"]]  # noqa: E731
+    assert titles("school") == ["교내 성적장학"]
+    assert titles("external") == ["[삼원장학재단] 삼원장학생"]

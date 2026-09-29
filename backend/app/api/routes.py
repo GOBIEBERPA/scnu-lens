@@ -107,9 +107,13 @@ def _today_range() -> tuple[datetime, datetime]:
 
 
 def _external_source_ids():
-    """입력 없음, 출력: 학교 밖 소스(공모전 모음·시험 일정)의 ID를 고르는 하위 쿼리."""
+    """입력 없음, 출력: 학교 밖 소스(공모전 모음·시험 일정·교외 장학금)의 ID를 고르는 하위 쿼리.
+
+    LIKE에서 '_'는 아무 글자 하나라서 그대로 쓰면 'scholar_%'가 학교 장학공지(scholarship)까지 잡는다. 이스케이프한다.
+    """
+    prefixes = ("exam", "contest", "scholar")
     return select(CrawlerSource.id).where(
-        or_(CrawlerSource.parser_type.like("exam_%"), CrawlerSource.parser_type.like("contest_%"), CrawlerSource.parser_type.like("scholar_%"))
+        or_(*(CrawlerSource.parser_type.like(f"{prefix}\\_%", escape="\\") for prefix in prefixes))
     )
 
 
