@@ -50,20 +50,13 @@ def test_newest_path_by_date() -> None:
     assert newest_path(spec) == "/b"
 
 
-def test_elsewhere_regional_not_recommended() -> None:
-    """입력: 대구 연고·광주 연고·전국 장학금, 출력: 다른 지역 연고만 추천 점수 0."""
+def test_regional_scholarship_still_recommended() -> None:
+    """입력: 다른 지역(대구) 연고 장학금, 출력: 사용자 고향을 모르므로 '나에게' 추천에서 빼지 않는다(표시만 한다)."""
     from app.models import Notice, UserProfile
     from app.services.ai import relevance_score
 
     user = UserProfile(web_device_id="u", department="미설정", interests=["장학금"], notify_categories=[])
-
-    def make(row: dict) -> Notice:
-        crawled = row_notice(row)
-        return Notice(title=crawled.title, raw_text=crawled.raw_text, source="교외 장학금", category="장학", structured_json={})
-
-    daegu = make({**ROW, "운영기관명": "달서인재육성장학재단", "지역거주여부 상세내용": "○ 대구 달서구 거주"})
-    gwangju = make(ROW)
-    national = make({**ROW, "운영기관명": "삼원장학재단", "지역거주여부 상세내용": "해당없음"})
-    assert relevance_score(user, daegu) == 0
-    assert relevance_score(user, gwangju) > 0
-    assert relevance_score(user, national) > 0
+    crawled = row_notice({**ROW, "운영기관명": "달서인재육성장학재단", "지역거주여부 상세내용": "○ 대구 달서구 거주"})
+    daegu = Notice(title=crawled.title, raw_text=crawled.raw_text, source="교외 장학금", category="장학", structured_json={})
+    assert "(지역 연고)" in daegu.title
+    assert relevance_score(user, daegu) > 0

@@ -522,23 +522,8 @@ def department_core(name: str | None) -> str:
     return core if len(core) >= 3 else name
 
 
-# 교외 장학금 중 거주지 조건이 있는 것은 제목에 "(지역 연고)"가 붙는다(crawlers/kosaf.py).
-REGIONAL_MARK = "(지역 연고)"
-HOME_REGION_TEXT = re.compile(r"전남|전라남도|광주|순천|여수|목포|광양|나주")
-
-
-def elsewhere_regional(notice: Notice) -> bool:
-    """입력: 공지, 출력: 전남·광주가 아닌 다른 지역 연고 장학금인지 여부(목록엔 보이되 추천은 안 한다)."""
-    if REGIONAL_MARK not in notice.title:
-        return False
-    region = next((line for line in (notice.raw_text or "").splitlines() if line.startswith("※ 지역 연고")), "")
-    return not HOME_REGION_TEXT.search(f"{notice.title} {region}")
-
-
 def relevance_score(user: UserProfile, notice: Notice) -> float:
     """입력: 사용자·공지, 출력: 학과/관심사/선택 분야 일치에 따른 단순 설명 가능 점수."""
-    if elsewhere_regional(notice):
-        return 0.0
     score = 0.0
     if _from_own_department_board(user, notice):
         score += 3.0
