@@ -73,7 +73,8 @@ export function NoticeDetail({ notice, onClose, saved, onToggleSave }: Props) {
         <h2 id="notice-title">{notice.title}</h2>
         <div className="detail-meta">
           <span>{notice.source}</span>
-          <span>{formatDate(notice.published_at)}</span>
+          {/* 시험 일정·교외 장학금은 게시일이 없다. "날짜 미상"을 띄우지 않고 뺀다. */}
+          {notice.published_at && <span>{formatDate(notice.published_at)}</span>}
           {status && <span className={`detail-deadline ${status.tone}`}><CalendarClock size={13} /> {status.text}</span>}
           {period && <span>신청 {period}</span>}
         </div>
