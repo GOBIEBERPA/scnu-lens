@@ -31,11 +31,15 @@ function Linkified({ text }: { text: string }) {
 }
 
 // 입력: 원문 주소, 출력: 원문 버튼 문구(학교 공지가 아닌데 "학교 원문"이라고 하지 않게).
-function originLabel(url: string): string {
+// 교외 장학금은 운영기관 홈페이지로 가는데, 홈페이지가 없으면 기관 이름 검색으로, 카페만 있으면 카페로 간다.
+function originLabel(url: string, source: string): string {
   if (url.includes("q-net.or.kr")) return "큐넷 시험일정에서 확인";
   if (url.includes("k-startup.go.kr")) return "K-Startup 공고에서 확인";
   if (url.includes("dataq.or.kr")) return "데이터자격검정에서 확인";
   if (url.includes("scnu.ac.kr")) return "학교 원문에서 확인";
+  if (url.includes("search.naver.com")) return "홈페이지 확인되지 않음 · 검색해 보기";
+  if (/cafe\.(daum|naver)\.net|blog\.naver\.com|band\.us/.test(url)) return "장학회 카페에서 확인";
+  if (source.includes("장학재단")) return "장학재단 홈페이지에서 확인";
   return "원문에서 확인";
 }
 
@@ -126,7 +130,7 @@ export function NoticeDetail({ notice, onClose, saved, onToggleSave }: Props) {
             </a>
           )}
           <a className="primary-link" href={notice.source_url} target="_blank" rel="noreferrer">
-            {originLabel(notice.source_url)} <ExternalLink size={16} />
+            {originLabel(notice.source_url, notice.source)} <ExternalLink size={16} />
           </a>
         </div>
       </article>

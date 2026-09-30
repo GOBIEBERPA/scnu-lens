@@ -158,7 +158,8 @@ def row_notice(row: dict, dead: set[str] = frozenset()) -> CrawledNotice:
         f"제출서류: {_clean(row.get('제출서류 상세내용'))}" if _clean(row.get("제출서류 상세내용")) else None,
         f"추천: {_clean(row.get('추천필요여부 상세내용'), 100)}" if _clean(row.get("추천필요여부 상세내용")) else None,
         f"자격제한: {_clean(row.get('자격제한 상세내용'))}" if _clean(row.get("자격제한 상세내용")) else None,
-        f"신청방법: 운영기관 홈페이지에서 신청 ({site})",
+        f"신청방법: 운영기관 홈페이지에서 신청 ({site})" if "search.naver.com" not in site
+        else "신청방법: 운영기관 공고 확인 (홈페이지 확인되지 않음)",
         f"운영기관: {org} ({_clean(row.get('운영기관구분'), 30) or '기관'})",
         "출처: 한국장학재단 학자금지원정보(공공데이터포털)",
     ]

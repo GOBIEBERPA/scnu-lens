@@ -110,3 +110,10 @@ def test_dead_link_rules() -> None:
             return [await dead_link(client, f"https://{h}.example.kr") for h in ("ssl", "gone", "slow", "ok")]
 
     assert asyncio.run(run()) == [True, True, False, False]
+
+
+def test_no_homepage_wording() -> None:
+    """입력: 홈페이지가 '해당없음'인 장학금, 출력: 신청방법에 검색 주소 대신 '홈페이지 확인되지 않음'."""
+    notice = row_notice({**ROW, "홈페이지 주소": "해당없음"})
+    assert "신청방법: 운영기관 공고 확인 (홈페이지 확인되지 않음)" in notice.raw_text
+    assert "search.naver.com" not in notice.raw_text
